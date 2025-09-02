@@ -6,6 +6,7 @@ import {
   InvoicesTable,
   LatestInvoiceRaw,
   Revenue,
+  Product,
 } from './definitions';
 import { formatCurrency } from './utils';
 
@@ -215,5 +216,25 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchProducts() {
+  try{
+    const products = await sql<Product[]>`
+      SELECT 
+        id,
+        name,
+        price,
+        invoice_id,
+        CASE WHEN invoice_id IS NULL THEN 'Available' ELSE 'Sold' END AS status
+      FROM products
+      ORDER BY created_at DESC
+    `;
+    return products
+  }
+  catch (err) {
+    console.error('Database Error:', err);
+    throw new Error('Failed to fetch products table.');
   }
 }

@@ -21,13 +21,24 @@ const FormSchema = z.object({
     invalid_type_error: "Please select an invoice status.",
   }),
   date: z.string(),
-  name: z.string(),
-  email: z.string().email({ message: "Please enter a valid email address." }),
 });
 
-const CreateCustomer = FormSchema.omit({ id: true, date: true });
+const CustomerSchema = z.object({
+  name: z.string().min(1, { message: "El nombre es obligatorio" }),
+  email: z.string().email({ message: "Por favor, ingrese un email válido" }),
+  image_url: z.string().min(1, { message: "La imagen es obligatoria" }),
+});
 
-export type State = {
+export type CustomerState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    image_url?: string[];
+  };
+  message?: string | null;
+};
+
+export type InvoicesState = {
   errors?: {
     customerId?: string[];
     amount?: string[];
@@ -36,10 +47,56 @@ export type State = {
   message?: string | null;
 };
 
-export async function createCustomer(prevState: State, formData: FormData) {
+const CreateCustomer = CustomerSchema.omit({});
+
+export async function createCustomer(prevState: CustomerState, formData: FormData) {
+  // Tomamos el archivo
+  const file = formData.get("image_url") as File | null;
+
+  // Por ahora guardamos solo el nombre, o null si no hay archivo
+  const image_url = file ? `/customers/${file.name}` : null;
+
+  // Validamos con Zod (name, email obligatorios, image_url opcional)
   const validatedFields = CreateCustomer.safeParse({
-    name: formData.get("name")?.toString(),
-    email: formData.get("email")?.toString(),
+    name: formData.get("name"),
+    email: formData.get("email"),
+    image_url,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Faltan campos. No se pudo crear el cliente.",
+    };
+  }
+
+  const { name, email } = validatedFields.data;
+
+  try {
+    await sql`
+      INSERT INTO customers (name, email, image_url)
+      VALUES (${name}, ${email}, ${image_url})
+    `;
+  } catch (error) {
+    console.error(error);
+    return { message: "Error en la base de datos. No se pudo crear el cliente." };
+  }
+
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+}
+
+const UpdateCustomer = CreateCustomer.omit({ });
+
+export async function updateCustomer(
+  id: string,
+  prevState: CustomerState,
+  formData: FormData
+) {
+  const validatedFields = UpdateCustomer.safeParse({
+    customerId: formData.get("customerId"),
+    name: formData.get("name"),
+    email: formData.get("email"),
   });
 
   if (!validatedFields.success) {
@@ -53,43 +110,8 @@ export async function createCustomer(prevState: State, formData: FormData) {
 
   try {
     await sql`
-      INSERT INTO customers (name, email)
-      VALUES (${name}, ${email})
-    `;
-  } catch (error) {
-    console.error(error);
-  }
-
-  revalidatePath("/dashboard/customers");
-  redirect("/dashboard/customers");
-}
-
-const UpdateCustomer = FormSchema.omit({ id: true, date: true });
-
-export async function updateCustomer(
-  id: string,
-  prevState: State,
-  formData: FormData
-) {
-  const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get("customerId"),
-    name: formData.get("name"),
-    email: formData.get("email"),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Invoice.",
-    };
-  }
-
-  const { customerId, name, email } = validatedFields.data;
-
-  try {
-    await sql`
       UPDATE customers
-      SET customer_id = ${customerId}, name = ${name}, email = ${email}
+      SET name = ${name}, email = ${email}
       WHERE id = ${id}
     `;
   } catch (error) {
@@ -106,7 +128,7 @@ export async function deleteCustomer(id: string) {
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
-export async function createInvoice(prevState: State, formData: FormData) {
+export async function createInvoice(prevState: InvoicesState, formData: FormData) {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get("customerId"),
     amount: formData.get("amount"),
@@ -141,7 +163,7 @@ const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 
 export async function updateInvoice(
   id: string,
-  prevState: State,
+  prevState: InvoicesState,
   formData: FormData
 ) {
   const validatedFields = UpdateInvoice.safeParse({
