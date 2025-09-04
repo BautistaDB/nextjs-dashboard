@@ -3,11 +3,11 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import postgres from "postgres";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { PrismaClient } from "../../generated/prisma";
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+const prisma = new PrismaClient();
 
 const FormSchema = z.object({
   id: z.string(),
@@ -49,12 +49,16 @@ export type InvoicesState = {
 
 const CreateCustomer = CustomerSchema.omit({});
 
-export async function createCustomer(prevState: CustomerState, formData: FormData) {
+export async function createCustomer(
+  prevState: CustomerState,
+  formData: FormData
+) {
   // Tomamos el archivo
   const file = formData.get("image_url") as File | null;
 
   // Por ahora guardamos solo el nombre, o null si no hay archivo
-  const image_url = file ? `/customers/${file.name}` : null;
+const image_url = file ? `/customers/${file.name}` : "/customers/default.png";
+
 
   // Validamos con Zod (name, email obligatorios, image_url opcional)
   const validatedFields = CreateCustomer.safeParse({
@@ -73,20 +77,25 @@ export async function createCustomer(prevState: CustomerState, formData: FormDat
   const { name, email } = validatedFields.data;
 
   try {
-    await sql`
-      INSERT INTO customers (name, email, image_url)
-      VALUES (${name}, ${email}, ${image_url})
-    `;
+    await prisma.customers.create({
+      data: {
+        name: name,
+        email: email,
+        image_url: image_url,
+      },
+    });
   } catch (error) {
     console.error(error);
-    return { message: "Error en la base de datos. No se pudo crear el cliente." };
+    return {
+      message: "Error en la base de datos. No se pudo crear el cliente.",
+    };
   }
 
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
 }
 
-const UpdateCustomer = CreateCustomer.omit({ });
+const UpdateCustomer = CreateCustomer.omit({});
 
 export async function updateCustomer(
   id: string,
@@ -109,11 +118,13 @@ export async function updateCustomer(
   const { name, email } = validatedFields.data;
 
   try {
-    await sql`
-      UPDATE customers
-      SET name = ${name}, email = ${email}
-      WHERE id = ${id}
-    `;
+    await prisma.customers.update({
+      where:{id: id},
+      data:{
+        name: name,
+        email: email,
+      }
+    })
   } catch (error) {
     console.error(error);
   }
@@ -122,13 +133,18 @@ export async function updateCustomer(
   redirect("/dashboard/customers");
 }
 export async function deleteCustomer(id: string) {
-  await sql`DELETE FROM customers WHERE id = ${id}`;
+  await prisma.customers.delete({
+    where: {id: id}
+  })
   revalidatePath("/dashboard/customers");
 }
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
-export async function createInvoice(prevState: InvoicesState, formData: FormData) {
+export async function createInvoice(
+  prevState: InvoicesState,
+  formData: FormData
+) {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get("customerId"),
     amount: formData.get("amount"),
@@ -147,10 +163,14 @@ export async function createInvoice(prevState: InvoicesState, formData: FormData
   const date = new Date().toISOString().split("T")[0];
 
   try {
-    await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-    `;
+    await prisma.invoices.create({
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+        date: date,
+      }
+    })
   } catch (error) {
     console.error(error);
   }
@@ -183,11 +203,14 @@ export async function updateInvoice(
   const amountInCents = amount * 100;
 
   try {
-    await sql`
-      UPDATE invoices
-      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-      WHERE id = ${id}
-    `;
+    await prisma.invoices.update({
+      where: {id: id},
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+      }
+    })
   } catch (error) {
     return { message: "Database Error: Failed to Update Invoice." };
   }
@@ -197,7 +220,9 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
+  await prisma.invoices.delete({
+    where:{id: id}
+  });
   revalidatePath("/dashboard/invoices");
 }
 
