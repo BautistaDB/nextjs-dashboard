@@ -23,11 +23,16 @@ model Invoice {
   id          String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   customer_id String     @db.Uuid
   amount      Int
-  status      String     @db.VarChar(255)
+  status      InvoiceStatus @default(pending)
   date        DateTime   @db.Date
   products    Product[]
 
   customer   Customer @relation(fields: [customer_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+enum InvoiceStatus {
+  pending
+  paid
 }
 
 model Product {

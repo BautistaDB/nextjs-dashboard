@@ -57,7 +57,7 @@ export async function createCustomer(
   const file = formData.get("image_url") as File | null;
   console.log(file)
   // Por ahora guardamos solo el nombre, o null si no hay archivo
-  const image_url = file?.size ? `/customers/${file.name}` : "/customers/default.png";
+  const image_url = file?.size ? `/customers/${file.name}` : null;
 
 
   // Validamos con Zod (name, email obligatorios, image_url opcional)
