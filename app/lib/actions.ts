@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { PrismaClient } from "../../generated/prisma";
+import { PrismaClient } from "generated";
 
 const prisma = new PrismaClient();
 
@@ -55,9 +55,9 @@ export async function createCustomer(
 ) {
   // Tomamos el archivo
   const file = formData.get("image_url") as File | null;
-
+  console.log(file)
   // Por ahora guardamos solo el nombre, o null si no hay archivo
-const image_url = file ? `/customers/${file.name}` : "/customers/default.png";
+  const image_url = file?.size ? `/customers/${file.name}` : "/customers/default.png";
 
 
   // Validamos con Zod (name, email obligatorios, image_url opcional)
@@ -77,7 +77,7 @@ const image_url = file ? `/customers/${file.name}` : "/customers/default.png";
   const { name, email } = validatedFields.data;
 
   try {
-    await prisma.customers.create({
+    await prisma.customer.create({
       data: {
         name: name,
         email: email,
@@ -118,7 +118,7 @@ export async function updateCustomer(
   const { name, email } = validatedFields.data;
 
   try {
-    await prisma.customers.update({
+    await prisma.customer.update({
       where:{id: id},
       data:{
         name: name,
@@ -133,7 +133,7 @@ export async function updateCustomer(
   redirect("/dashboard/customers");
 }
 export async function deleteCustomer(id: string) {
-  await prisma.customers.delete({
+  await prisma.customer.delete({
     where: {id: id}
   })
   revalidatePath("/dashboard/customers");
@@ -163,7 +163,7 @@ export async function createInvoice(
   const date = new Date().toISOString().split("T")[0];
 
   try {
-    await prisma.invoices.create({
+    await prisma.invoice.create({
       data: {
         customer_id: customerId,
         amount: amountInCents,
@@ -203,7 +203,7 @@ export async function updateInvoice(
   const amountInCents = amount * 100;
 
   try {
-    await prisma.invoices.update({
+    await prisma.invoice.update({
       where: {id: id},
       data: {
         customer_id: customerId,
@@ -220,7 +220,7 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-  await prisma.invoices.delete({
+  await prisma.invoice.delete({
     where:{id: id}
   });
   revalidatePath("/dashboard/invoices");

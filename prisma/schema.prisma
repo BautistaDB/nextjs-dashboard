@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../generated"
 }
 
 datasource db {
@@ -9,23 +9,29 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model customers {
+model Customer {
+  @@map("customers")
   id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name      String @db.VarChar(255)
   email     String @db.VarChar(255)
-  image_url String @db.VarChar(255)
+  image_url String? @db.VarChar(255)
+  invoices  Invoice[]  
 }
 
-model invoices {
+model Invoice {
+  @@map("invoices")
   id          String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   customer_id String     @db.Uuid
   amount      Int
   status      String     @db.VarChar(255)
   date        DateTime   @db.Date
-  products    products[]
+  products    Product[]
+
+  customer   Customer @relation(fields: [customer_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
-model products {
+model Product {
+  @@map("products")
   id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name        String    @db.VarChar(255)
   description String?
@@ -33,15 +39,17 @@ model products {
   invoice_id  String?   @db.Uuid
   created_at  DateTime? @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
-  invoices    invoices? @relation(fields: [invoice_id], references: [id], onUpdate: NoAction)
+  invoice    Invoice? @relation(fields: [invoice_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
 }
 
-model revenue {
+model Revenue {
+  @@map("revenue")
   month   String @unique @db.VarChar(4)
   revenue Int
 }
 
-model users {
+model User {
+  @@map("users")
   id       String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name     String @db.VarChar(255)
   email    String @unique
