@@ -341,33 +341,7 @@ export async function fetchFilteredCustomers(query: string) {
           ],
         },
       }),
-      // [
-      //  { _sum: number, customer_id: 1, status: "pending"}
-      //  { _sum: number, customer_id: 1, status: "paid"}
-      //  { _sum: number, customer_id: 2, status: "pending"}
-      //  { _sum: number, customer_id: 2, status: "paid"}
-      //  { _sum: number, customer_id: 3, status: "paid"}
-      //  { _sum: number, customer_id: 4, status: "paid"}
-      //  { _sum: number, customer_id: 6, status: "pending"}
-      // ]
     ]);
-    // const data = await sql<CustomersTableType[]>`
-    // SELECT
-    //   customers.id,
-    //   customers.name,
-    //   customers.email,
-    //   customers.image_url,
-    //   COUNT(invoices.id) AS total_invoices,
-    //   SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-    //   SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-    // FROM customers
-    // LEFT JOIN invoices ON customers.id = invoices.customer_id
-    // WHERE
-    //   customers.name ILIKE ${`%${query}%`} OR
-    //     customers.email ILIKE ${`%${query}%`}
-    // GROUP BY customers.id, customers.name, customers.email, customers.image_url
-    // ORDER BY customers.name ASC
-    // `;
 
     type Total = {
       [Status in Invoice["status"]]?: string;
@@ -383,34 +357,11 @@ export async function fetchFilteredCustomers(query: string) {
       {} as { [customer_id: Invoice["customer_id"]]: Total }
     );
 
-    // {
-    //  1: {
-    //        pending: string,
-    //        paid: string,
-    //  },
-    //  2: {
-    //        pending: string,
-    //        paid: string,
-    //  },
-    //  3: {
-    //        paid: string,
-    //  },
-    //  4: {
-    //        paid: string,
-    //  },
-    //  6: {
-    //        pending: string,
-    //  },
-    // }
-
     return customers.map(({ image_url, ...customer }) => ({
       ...customer,
       image_url: image_url ?? "/customers/default.png",
       total: totals[customer.id],
     }));
-    // [
-    //  {...customer, total: { pending: string, paid: string }}
-    // ]
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch customer table.");
