@@ -11,11 +11,11 @@ export default function ProductsTable({ products }: { products: Product[] }) {
         </tr>
       </thead>
       <tbody>
-        {products.map((p) => (
-          <tr key={p.id}>
-            <td className="border px-4 py-2">{p.name}</td>
-            <td className="border px-4 py-2">${p.price}</td>
-            <td className="border px-4 py-2">{p.status}</td>
+        {products.map((product) => (
+          <tr key={product.id}>
+            <td className="border px-4 py-2">{product.name}</td>
+            <td className="border px-4 py-2">${product.price.toFixed(2)}</td>
+            <td className="border px-4 py-2">{product.status}</td>
           </tr>
         ))}
       </tbody>

@@ -118,7 +118,6 @@ export async function fetchFilteredInvoices(
     const invoices = await prisma.invoice.findMany({
       select: {
         id: true,
-        amount: true,
         date: true,
         status: true,
         customer: {
@@ -129,66 +128,65 @@ export async function fetchFilteredInvoices(
             image_url: true,
           },
         },
+        products: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+          },
+        },
       },
       where: {
         OR: [
           {
             customer: {
               OR: [
-                {
-                  name: {
-                    contains: query,
-                    mode: "insensitive",
-                  },
-                },
-                {
-                  email: {
-                    contains: query,
-                    mode: "insensitive",
-                  },
-                },
+                { name: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
               ],
             },
           },
-          // {
-          //   amount: {
-          //     equals: Number(query),
-          //   },
-          // },
           {
             status:
               query.toLowerCase() in InvoiceStatus
-                ? {
-                    equals: query.toLowerCase() as InvoiceStatus,
-                  }
+                ? { equals: query.toLowerCase() as InvoiceStatus }
                 : undefined,
           },
-          // {
-          //   date: {
-          //     gte: new Date(query),
-          //   },
-          // },
         ],
       },
-      orderBy: {
-        date: "desc",
-      },
+      orderBy: { date: "desc" },
       take: ITEMS_PER_PAGE,
       skip: offset,
     });
 
-    return invoices.map(({ customer, ...invoice }) => ({
-      ...invoice,
-      customer: {
-        ...customer,
-        image_url: customer.image_url ?? "/customers/default.png",
-      },
-    }));
+    // Convertimos Decimal → number y calculamos el amount
+    const invoicesWithAmount = invoices.map((invoice) => {
+      const products = invoice.products.map((product) => ({
+        ...product,
+        price: Number(product.price),
+      }));
+
+      const amount = products.reduce((sum, product) => sum + product.price, 0);
+
+      return {
+        ...invoice,
+        customer: {
+          ...invoice.customer,
+          image_url: invoice.customer.image_url ?? "/customers/default.png",
+        },
+        products, // para usar en ProductModal
+        amount,   // suma de precios de productos
+      };
+    });
+
+    return invoicesWithAmount;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoices.");
   }
 }
+
 
 export async function fetchInvoicesPages(query: string) {
   try {
@@ -282,91 +280,57 @@ export async function fetchCustomers() {
 
 export async function fetchFilteredCustomers(query: string) {
   try {
-    const [customers, invoicesSum] = await Promise.all([
-      prisma.customer.findMany({
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image_url: true,
-          _count: {
-            select: {
-              invoices: true,
-            },
-          },
-        },
-        where: {
-          OR: [
-            {
-              name: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-            {
-              email: {
-                contains: query,
-                mode: "insensitive",
-              },
-            },
-          ],
-        },
-        orderBy: {
-          name: "asc",
-        },
-      }),
-      prisma.invoice.groupBy({
-        by: ["customer_id", "status"],
-        _sum: {
-          amount: true,
-        },
-        where: {
-          OR: [
-            {
-              customer: {
-                name: {
-                  contains: query,
-                  mode: "insensitive",
-                },
-              },
-            },
-            {
-              customer: {
-                email: {
-                  contains: query,
-                  mode: "insensitive",
-                },
-              },
-            },
-          ],
-        },
-      }),
-    ]);
+    // Traemos clientes que coinciden con el query
+    const customers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image_url: true,
+        _count: { select: { invoices: true } }
+      },
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { email: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { name: "asc" },
+    });
 
-    type Total = {
-      [Status in Invoice["status"]]?: string;
-    };
+    // Traemos todas las facturas de esos clientes con sus productos
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        customer_id: { in: customers.map(c => c.id) },
+      },
+      include: {
+        products: true, // incluimos los productos
+      },
+    });
 
-    const totals = invoicesSum.reduce(
-      (totals, sum) => ({
-        [sum.customer_id]: {
-          ...totals[sum.customer_id],
-          [sum.status]: formatCurrency(sum._sum.amount ?? 0),
-        },
-      }),
-      {} as { [customer_id: Invoice["customer_id"]]: Total }
-    );
+    // Construimos un objeto con el total por cliente y por estado
+    type Total = { [Status in Invoice["status"]]?: number };
 
-    return customers.map(({ image_url, ...customer }) => ({
+    const totals: Record<string, Total> = {};
+
+    invoices.forEach(invoice => {
+      const amount = invoice.products.reduce((sum, p) => sum + Number(p.price), 0);
+      if (!totals[invoice.customer_id]) totals[invoice.customer_id] = {};
+      totals[invoice.customer_id][invoice.status] = (totals[invoice.customer_id][invoice.status] ?? 0) + amount;
+    });
+
+    // Mapear clientes agregando su total
+    return customers.map(customer => ({
       ...customer,
-      image_url: image_url ?? "/customers/default.png",
-      total: totals[customer.id],
+      image_url: customer.image_url ?? "/customers/default.png",
+      total: totals[customer.id] ?? {}, // si no tiene facturas, total vacío
     }));
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch customer table.");
   }
 }
+
 
 export async function fetchProducts() {
   try {

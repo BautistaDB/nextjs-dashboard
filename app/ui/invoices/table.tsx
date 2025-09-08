@@ -1,8 +1,10 @@
-import Image from 'next/image';
-import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons';
-import InvoiceStatus from '@/app/ui/invoices/status';
-import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
-import { fetchFilteredInvoices } from '@/app/lib/data';
+import Image from "next/image";
+import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
+import InvoiceStatus from "@/app/ui/invoices/status";
+import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
+import { fetchFilteredInvoices } from "@/app/lib/data";
+import Modal from "../products/Modal";
+import ProductModal from "../products/ProductModal";
 
 export default async function InvoicesTable({
   query,
@@ -35,7 +37,9 @@ export default async function InvoicesTable({
                       />
                       <p>{invoice.customer.name}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{invoice.customer.email}</p>
+                    <p className="text-sm text-gray-500">
+                      {invoice.customer.email}
+                    </p>
                   </div>
                   <InvoiceStatus status={invoice.status} />
                 </div>
@@ -45,6 +49,7 @@ export default async function InvoicesTable({
                       {formatCurrency(invoice.amount)}
                     </p>
                     <p>{formatDateToLocal(invoice.date)}</p>
+                    <p>{invoice.products.length}</p>
                   </div>
                   <div className="flex justify-end gap-2">
                     <UpdateInvoice id={invoice.id} />
@@ -73,6 +78,9 @@ export default async function InvoicesTable({
                   Status
                 </th>
                 <th scope="col" className="relative py-3 pl-6 pr-3">
+                  Products
+                </th>
+                <th scope="col" className="relative py-3 pl-6 pr-3">
                   <span className="sr-only">Edit</span>
                 </th>
               </tr>
@@ -99,13 +107,23 @@ export default async function InvoicesTable({
                     {invoice.customer.email}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(invoice.amount)}
+                    ${invoice.amount}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {formatDateToLocal(invoice.date)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <InvoiceStatus status={invoice.status} />
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 flex items-center gap-2">
+                    <span>{invoice.products.length}</span>
+                    <ProductModal
+                      products={invoice.products.map((p) => ({
+                        id: p.id,
+                        name: p.name,
+                        price: Number(p.price), // Decimal → number
+                      }))}
+                    />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
