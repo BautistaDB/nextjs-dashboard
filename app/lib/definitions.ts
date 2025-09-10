@@ -87,10 +87,30 @@ export type InvoiceForm = {
   status: 'pending' | 'paid';
 };
 
+export type ProductForm = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  status: "Available" | "Sold";};
+
 export type Product = {
   id: string;
   name: string;
   price: number;
   invoice_id: string | null;
   status: "Available" | "Sold";
+};
+
+export type ProductField = {
+  id: string;
+  name: string;
+};
+
+export type ProductsTable = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  status: 'Available' | 'Sold';
 };

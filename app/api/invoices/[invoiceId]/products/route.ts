@@ -16,7 +16,7 @@ export async function GET(
       select: { id: true, name: true, price: true },    
     });
 
-    const totalAmount = products.reduce((acc, p) => acc + Number(p.price), 0);
+    const totalAmount = products.reduce((acc, product) => acc + Number(product.price), 0);
 
     return NextResponse.json({ ok: true, products, totalAmount });
   } catch (err) {

@@ -9,7 +9,9 @@ import { PrismaClient } from "generated";
 
 const prisma = new PrismaClient();
 
-const FormSchema = z.object({
+/* --------------  SCHEMAS ---------------- */
+
+const InvoiceSchema = z.object({
   id: z.string(),
   customerId: z.string({
     invalid_type_error: "Please select a customer.",
@@ -29,6 +31,16 @@ const CustomerSchema = z.object({
   image_url: z.string().min(1, { message: "La imagen es obligatoria" }),
 });
 
+const ProductSchema = z.object({
+  name: z.string().min(1, { message: "El nombre es obligatorio" }),
+  description: z.string().min(1, { message: "La descripcion es obligatoria" }),
+  price: z.coerce
+    .number()
+    .gt(0, { message: "Please enter an amount greater than $0." }),
+});
+
+/* --------------  TYPES ---------------- */
+
 export type CustomerState = {
   errors?: {
     name?: string[];
@@ -47,20 +59,115 @@ export type InvoicesState = {
   message?: string | null;
 };
 
+export type ProductsState = {
+  errors?: {
+    name?: string[];
+    description?: string[];
+    price?: string[];
+  };
+  message?: string | null;
+};
+
+/* --------------  INVOICES ---------------- */
+
+const CreateInvoice = InvoiceSchema.omit({ id: true, date: true });
+
+export async function createInvoice(
+  prevState: InvoicesState,
+  formData: FormData
+) {
+  const validatedFields = CreateInvoice.safeParse({
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Create Invoice.",
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
+  const amountInCents = amount * 100;
+  const date = new Date().toISOString().split("T")[0];
+
+  try {
+    await prisma.invoice.create({
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+        date: date,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+  revalidatePath("/dashboard/invoices");
+  redirect("/dashboard/invoices");
+}
+
+const UpdateInvoice = InvoiceSchema.omit({ id: true, date: true });
+
+export async function updateInvoice(
+  id: string,
+  prevState: InvoicesState,
+  formData: FormData
+) {
+  const validatedFields = UpdateInvoice.safeParse({
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to Update Invoice.",
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
+  const amountInCents = amount * 100;
+
+  try {
+    await prisma.invoice.update({
+      where: { id: id },
+      data: {
+        customer_id: customerId,
+        amount: amountInCents,
+        status: status,
+      },
+    });
+  } catch (error) {
+    return { message: "Database Error: Failed to Update Invoice." };
+  }
+
+  revalidatePath("/dashboard/invoices");
+  redirect("/dashboard/invoices");
+}
+
+export async function deleteInvoice(id: string) {
+  await prisma.invoice.delete({
+    where: { id: id },
+  });
+  revalidatePath("/dashboard/invoices");
+}
+
+/* --------------  CUSTOMERS ---------------- */
+
 const CreateCustomer = CustomerSchema.omit({});
 
 export async function createCustomer(
   prevState: CustomerState,
   formData: FormData
 ) {
-  // Tomamos el archivo
   const file = formData.get("image_url") as File | null;
-  console.log(file)
-  // Por ahora guardamos solo el nombre, o null si no hay archivo
+  console.log(file);
   const image_url = file?.size ? `/customers/${file.name}` : null;
 
-
-  // Validamos con Zod (name, email obligatorios, image_url opcional)
   const validatedFields = CreateCustomer.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -119,12 +226,12 @@ export async function updateCustomer(
 
   try {
     await prisma.customer.update({
-      where:{id: id},
-      data:{
+      where: { id: id },
+      data: {
         name: name,
         email: email,
-      }
-    })
+      },
+    });
   } catch (error) {
     console.error(error);
   }
@@ -134,97 +241,101 @@ export async function updateCustomer(
 }
 export async function deleteCustomer(id: string) {
   await prisma.customer.delete({
-    where: {id: id}
-  })
+    where: { id: id },
+  });
   revalidatePath("/dashboard/customers");
 }
 
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
+/* --------------  PRODUCTS ---------------- */
 
-export async function createInvoice(
-  prevState: InvoicesState,
+const CreateProduct = ProductSchema.omit({});
+
+export async function createProduct(
+  prevState: ProductsState,
   formData: FormData
 ) {
-  const validatedFields = CreateInvoice.safeParse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+  const validatedFields = CreateProduct.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description"),
+    price: formData.get("price"),
   });
-  // If form validation fails, return errors early. Otherwise, continue.
+
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Invoice.",
+      message: "Faltan campos. No se pudo crear el cliente.",
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split("T")[0];
+  const { name, description, price } = validatedFields.data;
 
   try {
-    await prisma.invoice.create({
+    await prisma.product.create({
       data: {
-        customer_id: customerId,
-        amount: amountInCents,
-        status: status,
-        date: date,
-      }
-    })
+        name: name,
+        description: description,
+        price: price,
+      },
+    });
   } catch (error) {
     console.error(error);
-  }
-
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
-}
-
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-
-export async function updateInvoice(
-  id: string,
-  prevState: InvoicesState,
-  formData: FormData
-) {
-  const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
-  });
-
-  if (!validatedFields.success) {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Update Invoice.",
+      message: "Error en la base de datos. No se pudo crear el cliente.",
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
+  revalidatePath("/dashboard/products");
+  redirect("/dashboard/products");
+}
 
-  try {
-    await prisma.invoice.update({
-      where: {id: id},
-      data: {
-        customer_id: customerId,
-        amount: amountInCents,
-        status: status,
-      }
-    })
-  } catch (error) {
-    return { message: "Database Error: Failed to Update Invoice." };
+const UpdateProduct = ProductSchema.omit({});
+
+export async function updateProduct(
+  id: string,
+  prevState: ProductsState,
+  formData: FormData
+) {
+  const validated = UpdateProduct.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description") ?? null,
+    price: formData.get("price"),
+  });
+
+  if (!validated.success) {
+    return {
+      errors: validated.error.flatten().fieldErrors,
+      message: "Faltan o son inválidos algunos campos. No se pudo actualizar.",
+    };
   }
 
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
+  const { name, description, price } = validated.data;
+
+  try {
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        description: description ?? null,
+        price,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return { message: "Error en la base de datos. No se pudo actualizar." };
+  }
+
+  revalidatePath("/dashboard/products");
+  redirect("/dashboard/products");
 }
 
-export async function deleteInvoice(id: string) {
-  await prisma.invoice.delete({
-    where:{id: id}
+export async function deleteProduct(id: string) {
+  await prisma.product.delete({
+    where: { id: id },
   });
-  revalidatePath("/dashboard/invoices");
+  revalidatePath("/dashboard/products");
 }
+
+/* --------------  AUTHENTICATE ---------------- */
 
 export async function authenticate(
   prevState: string | undefined,
