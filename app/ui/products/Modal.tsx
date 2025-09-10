@@ -6,7 +6,7 @@ export default function Modal({ onClose, title, children }: { onClose: () => voi
         <div className="bg-white rounded-lg shadow-lg p-6 w-96">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">{title}</h2>
-                <button onClick={onClose} className="text-gray-500 hover:text-gray-700">&times;</button>
+                <button onClick={onClose} className="text-gray-500 hover:text-gray-700">X</button>
             </div>
             <div>
                 {children}

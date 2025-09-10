@@ -3,7 +3,6 @@ import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
 import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
-import Modal from "../products/Modal";
 import ProductModal from "../products/ProductModal";
 
 export default async function InvoicesTable({
@@ -116,14 +115,7 @@ export default async function InvoicesTable({
                     <InvoiceStatus status={invoice.status} />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 flex items-center gap-2">
-                    <span>{invoice.products.length}</span>
-                    <ProductModal
-                      products={invoice.products.map((p) => ({
-                        id: p.id,
-                        name: p.name,
-                        price: Number(p.price), // Decimal → number
-                      }))}
-                    />
+                    <ProductModal invoiceId={invoice.id} count={invoice.products.length} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">

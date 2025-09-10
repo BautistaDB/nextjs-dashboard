@@ -46,7 +46,6 @@ export async function fetchLatestInvoices() {
       },
     });
 
-    // Darle el mismo formato que antes
     const latestInvoices = data.map((invoice) => ({
       id: invoice.id,
       amount: formatCurrency(invoice.amount),
@@ -160,7 +159,6 @@ export async function fetchFilteredInvoices(
       skip: offset,
     });
 
-    // Convertimos Decimal → number y calculamos el amount
     const invoicesWithAmount = invoices.map((invoice) => {
       const products = invoice.products.map((product) => ({
         ...product,
@@ -175,8 +173,8 @@ export async function fetchFilteredInvoices(
           ...invoice.customer,
           image_url: invoice.customer.image_url ?? "/customers/default.png",
         },
-        products, // para usar en ProductModal
-        amount,   // suma de precios de productos
+        products,
+        amount,   
       };
     });
 
@@ -243,12 +241,11 @@ export async function fetchInvoiceById(id: string) {
       },
     });
 
-    if (!invoice) return null; // No existe factura con ese ID
+    if (!invoice) return null; 
 
-    // Convertimos amount de cents a dólares
     const formattedInvoice = {
       ...invoice,
-      amount: Number(invoice.amount) / 100, // prisma devuelve un Decimal por eso se convierte a Number
+      amount: Number(invoice.amount) / 100,
     };
 
     console.log(formattedInvoice);
@@ -280,7 +277,6 @@ export async function fetchCustomers() {
 
 export async function fetchFilteredCustomers(query: string) {
   try {
-    // Traemos clientes que coinciden con el query
     const customers = await prisma.customer.findMany({
       select: {
         id: true,
@@ -298,17 +294,15 @@ export async function fetchFilteredCustomers(query: string) {
       orderBy: { name: "asc" },
     });
 
-    // Traemos todas las facturas de esos clientes con sus productos
     const invoices = await prisma.invoice.findMany({
       where: {
         customer_id: { in: customers.map(c => c.id) },
       },
       include: {
-        products: true, // incluimos los productos
+        products: true, 
       },
     });
 
-    // Construimos un objeto con el total por cliente y por estado
     type Total = { [Status in Invoice["status"]]?: number };
 
     const totals: Record<string, Total> = {};
@@ -319,11 +313,10 @@ export async function fetchFilteredCustomers(query: string) {
       totals[invoice.customer_id][invoice.status] = (totals[invoice.customer_id][invoice.status] ?? 0) + amount;
     });
 
-    // Mapear clientes agregando su total
     return customers.map(customer => ({
       ...customer,
       image_url: customer.image_url ?? "/customers/default.png",
-      total: totals[customer.id] ?? {}, // si no tiene facturas, total vacío
+      total: totals[customer.id] ?? {}, 
     }));
   } catch (err) {
     console.error("Database Error:", err);

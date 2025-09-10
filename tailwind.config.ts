@@ -20,6 +20,11 @@ const config: Config = {
       },
     },
     keyframes: {
+      spin:{
+        '100%' : {
+          transform: 'rotate(360deg)',
+        },
+      },
       shimmer: {
         '100%': {
           transform: 'translateX(100%)',
