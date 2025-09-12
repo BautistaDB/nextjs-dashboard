@@ -7,7 +7,7 @@ const prisma = new PrismaClient().$extends({
     product: {
       status: {
         compute: ({ invoice_id }) =>
-          invoice_id === null ? "Available" : "Sold",
+          invoice_id === null ? "available" : "sold",
       },
     },
   },
@@ -17,16 +17,12 @@ const prisma = new PrismaClient().$extends({
 
 export async function fetchRevenue() {
   try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
-
     console.log("Fetching revenue data...");
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await prisma.revenue.findMany();
 
     console.log("Data fetch completed after 3 seconds.");
-
     return data;
   } catch (error) {
     console.error("Database Error:", error);
@@ -36,31 +32,34 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
+    // Ya no leemos 'amount' desde invoices; calculamos el total por productos
     const data = await prisma.invoice.findMany({
       take: 5,
-      orderBy: {
-        date: "desc",
-      },
+      orderBy: { date: "desc" },
       select: {
         id: true,
-        amount: true,
         customer: {
-          select: {
-            name: true,
-            image_url: true,
-            email: true,
-          },
+          select: { name: true, image_url: true, email: true },
         },
+        products: { select: { price: true } },
       },
     });
 
-    const latestInvoices = data.map((invoice) => ({
-      id: invoice.id,
-      amount: formatCurrency(invoice.amount),
-      name: invoice.customer.name,
-      image_url: invoice.customer.image_url,
-      email: invoice.customer.email,
-    }));
+    const latestInvoices = data.map((invoice) => {
+      const total =
+        invoice.products.reduce(
+          (sum, p) => sum + Number(p.price),
+          0
+        ) ?? 0;
+
+      return {
+        id: invoice.id,
+        amount: formatCurrency(total), // mantenemos la propiedad para no romper UI
+        name: invoice.customer.name,
+        image_url: invoice.customer.image_url ?? "/customers/default.png",
+        email: invoice.customer.email,
+      };
+    });
 
     return latestInvoices;
   } catch (error) {
@@ -71,27 +70,21 @@ export async function fetchLatestInvoices() {
 
 export async function fetchCardData() {
   try {
-    const invoiceCountPromise = await prisma.invoice.count();
-    const customerCountPromise = await prisma.customer.count();
-    const paidInvoicesPromise = await prisma.invoice.aggregate({
-      _sum: {
-        amount: true,
-      },
-      where: {
-        status: "paid",
-      },
+    const invoiceCountPromise = prisma.invoice.count();
+    const customerCountPromise = prisma.customer.count();
+
+    // En vez de _sum.amount, sumamos precios de productos por estado de la invoice
+    const paidInvoicesPromise = prisma.invoice.findMany({
+      where: { status: "paid" },
+      select: { products: { select: { price: true } } },
     });
 
-    const pendingInvoicesPromise = await prisma.invoice.aggregate({
-      _sum: {
-        amount: true,
-      },
-      where: {
-        status: "pending",
-      },
+    const pendingInvoicesPromise = prisma.invoice.findMany({
+      where: { status: "pending" },
+      select: { products: { select: { price: true } } },
     });
 
-    const [numberOfInvoices, numberOfCustomers, paidResult, pendingResult] =
+    const [numberOfInvoices, numberOfCustomers, paidList, pendingList] =
       await Promise.all([
         invoiceCountPromise,
         customerCountPromise,
@@ -99,11 +92,19 @@ export async function fetchCardData() {
         pendingInvoicesPromise,
       ]);
 
+    const sumProducts = (invoices: { products: { price: any }[] }[]) =>
+      invoices.reduce(
+        (acc, inv) =>
+          acc +
+          inv.products.reduce((s, p) => s + Number(p.price), 0),
+        0
+      );
+
     return {
       numberOfInvoices,
       numberOfCustomers,
-      totalPaidInvoices: formatCurrency(paidResult._sum.amount ?? 0),
-      totalPendingInvoices: formatCurrency(pendingResult._sum.amount ?? 0),
+      totalPaidInvoices: formatCurrency(sumProducts(paidList)),
+      totalPendingInvoices: formatCurrency(sumProducts(pendingList)),
     };
   } catch (error) {
     console.error("Database Error:", error);
@@ -114,6 +115,7 @@ export async function fetchCardData() {
 /* --------------  INVOICES ---------------- */
 
 const ITEMS_PER_PAGE = 6;
+
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number
@@ -155,7 +157,7 @@ export async function fetchFilteredInvoices(
           },
           {
             status:
-              query.toLowerCase() in InvoiceStatus
+              (query?.toLowerCase?.() ?? "") in InvoiceStatus
                 ? { equals: query.toLowerCase() as InvoiceStatus }
                 : undefined,
           },
@@ -166,6 +168,7 @@ export async function fetchFilteredInvoices(
       skip: offset,
     });
 
+    // Calculamos total a partir de products.price (no columna amount)
     const invoicesWithAmount = invoices.map((invoice) => {
       const products = invoice.products.map((product) => ({
         ...product,
@@ -181,7 +184,7 @@ export async function fetchFilteredInvoices(
           image_url: invoice.customer.image_url ?? "/customers/default.png",
         },
         products,
-        amount,
+        amount, // valor derivado
       };
     });
 
@@ -200,27 +203,15 @@ export async function fetchInvoicesPages(query: string) {
           {
             customer: {
               OR: [
-                {
-                  name: {
-                    contains: query,
-                    mode: "insensitive",
-                  },
-                },
-                {
-                  email: {
-                    contains: query,
-                    mode: "insensitive",
-                  },
-                },
+                { name: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
               ],
             },
           },
           {
             status:
-              query.toLowerCase() in InvoiceStatus
-                ? {
-                    equals: query.toLowerCase() as InvoiceStatus,
-                  }
+              (query?.toLowerCase?.() ?? "") in InvoiceStatus
+                ? { equals: query.toLowerCase() as InvoiceStatus }
                 : undefined,
           },
         ],
@@ -237,25 +228,29 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
   try {
+    // Quitamos 'amount' del select
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       select: {
         id: true,
         customer_id: true,
-        amount: true,
         status: true,
+        products: { select: { price: true } }, // opcional, por si necesitás el total
       },
     });
 
     if (!invoice) return null;
 
-    const formattedInvoice = {
-      ...invoice,
-      amount: Number(invoice.amount) / 100,
-    };
+    // Si necesitás el total en el form, lo calculás aquí (no es columna)
+    const total =
+      invoice.products?.reduce((s, p) => s + Number(p.price), 0) ?? 0;
 
-    console.log(formattedInvoice);
-    return formattedInvoice;
+    return {
+      id: invoice.id,
+      customer_id: invoice.customer_id,
+      status: invoice.status,
+      total, // derivado; eliminar si no lo usás
+    };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoice.");
@@ -267,13 +262,8 @@ export async function fetchInvoiceById(id: string) {
 export async function fetchCustomers() {
   try {
     const customers = await prisma.customer.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
     });
 
     return customers;
@@ -303,16 +293,11 @@ export async function fetchFilteredCustomers(query: string) {
     });
 
     const invoices = await prisma.invoice.findMany({
-      where: {
-        customer_id: { in: customers.map((c) => c.id) },
-      },
-      include: {
-        products: true,
-      },
+      where: { customer_id: { in: customers.map((c) => c.id) } },
+      include: { products: true },
     });
 
     type Total = { [Status in Invoice["status"]]?: number };
-
     const totals: Record<string, Total> = {};
 
     invoices.forEach((invoice) => {
@@ -333,6 +318,31 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch customer table.");
+  }
+}
+
+export async function fetchCustomerById(id: string) {
+  try {
+    // Quitamos 'amount' del select
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    if (!customer) return null;
+
+    return {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+    };
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch invoice.");
   }
 }
 
@@ -413,10 +423,7 @@ export async function fetchProductsPages(query: string) {
   try {
     const data = await prisma.product.count({
       where: {
-        name: {
-          contains: query,
-          mode: "insensitive",
-        },
+        name: { contains: query, mode: "insensitive" },
       },
     });
 
@@ -449,13 +456,13 @@ export async function fetchProductById(
     name: p.name,
     description: p.description ?? "",
     price: typeof p.price === "number" ? p.price : Number(p.price),
-    status: p.invoice_id ? "Sold" : "Available",
+    status: p.invoice_id ? "sold" : "available",
   };
 }
 
 export async function fetchProductsAvailable() {
   const available = await prisma.product.findMany({
-    where: { invoice_id: null }, // disponibles = sin factura
+    where: { invoice_id: null },
     select: { id: true, name: true, price: true },
     orderBy: { name: "asc" },
   });

@@ -1,13 +1,13 @@
 import Form from "@/app/ui/customers/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchCustomers, fetchInvoiceById } from "@/app/lib/data";
+import { fetchCustomers, fetchCustomerById } from "@/app/lib/data";
 import { notFound } from "next/navigation";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = params.id;
   const [customers] = await Promise.all([
-    fetchInvoiceById(id),
+    fetchCustomerById(id),
     fetchCustomers(),
   ]);
   if (!customers) {
@@ -18,10 +18,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: "Invoices", href: "/dashboard/invoices" },
+          { label: "Customers", href: "/dashboard/customers" },
           {
             label: "Edit Invoice",
-            href: `/dashboard/invoices/${id}/edit`,
+            href: `/dashboard/customers/${id}/edit`,
             active: true,
           },
         ]}

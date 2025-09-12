@@ -74,12 +74,12 @@ export default function Form({
                 </span>
               </label>
             ))}
-          </div>
           {state.errors?.productIds && (
             <p id="products-error" className="mt-1 text-sm text-red-600">
               {state.errors.productIds}
             </p>
           )}
+          </div>
         </div>
 
         {/* Invoice Status */}

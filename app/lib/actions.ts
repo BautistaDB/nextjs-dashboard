@@ -7,15 +7,16 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { PrismaClient } from "generated";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 /* --------------  SCHEMAS ---------------- */
 
 const InvoiceSchema = z.object({
   customerId: z.string().min(1),
-  productIds: z.array(z.string().min(1)).min(1, { message: "Selecciona por lo menos un vehículo" }),
+  productIds: z
+    .array(z.string().min(1))
+    .min(1, { message: "Selecciona por lo menos un vehículo" }),
   status: z.enum(["pending", "paid"]),
-  amount: z.coerce.number(),
 });
 
 const CustomerSchema = z.object({
@@ -47,7 +48,6 @@ export type InvoicesState = {
   errors?: {
     customerId?: string[];
     productIds?: string[];
-    amount?: string[];
     status?: string[];
   };
   message?: string | null;
@@ -82,42 +82,25 @@ export async function createInvoice(
     };
   }
 
- const { customerId, productIds, status } = validatedFields.data;
+  const { customerId, productIds, status } = validatedFields.data;
 
   try {
-    await prisma.$transaction(async (tx) => {
-      // 1) Traer productos seleccionados que estén disponibles
-      const products = await tx.product.findMany({
-        where: { id: { in: productIds }, invoice_id: null },
-        select: { id: true, price: true },
-      });
-      if (products.length !== productIds.length) {
-        throw new Error("Some selected products are not available.");
-      }
-
-       const amountInvoice = products.reduce((sum, product) => {
-        const price = typeof product.price === "number" ? product.price : Number(product.price);
-        return sum + Math.round(price); // cambia a Math.round(price * 100) si price está en $ con decimales
-      }, 0);
-
-            // 3) Crear invoice con FECHA ACTUAL
-      const invoice = await tx.invoice.create({
-        data: {
-          customer_id: customerId,
-          amount: amountInvoice,
-          status,
-          date: new Date(), 
+    const invoice = await prisma.invoice.create({
+      data: {
+        customer_id: customerId,
+        status,
+        date: new Date(),
+        products: {
+          connect: productIds.map((id) => ({
+            id,
+            // AND: {
+            //   invoice_id: null,
+            // },
+          })),
         },
-        select: { id: true },
-      });
-
-      // 4) Asociar todos los productos a esa invoice (marcar “sold”)
-      await tx.product.updateMany({
-        where: { id: { in: productIds }, invoice_id: null },
-        data: { invoice_id: invoice.id },
-      });
+      },
+      select: { id: true },
     });
-
   } catch (error) {
     console.error(error);
   }
@@ -128,14 +111,14 @@ export async function createInvoice(
 
 const UpdateInvoice = InvoiceSchema;
 
-export async function updateInvoice( //MODIFICAR NO ME FUNCIONA
+export async function updateInvoice(
   id: string,
   prevState: InvoicesState,
   formData: FormData
 ) {
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
+    productIds: formData.getAll?.("productIds") ?? [],
     status: formData.get("status"),
   });
 
@@ -146,16 +129,14 @@ export async function updateInvoice( //MODIFICAR NO ME FUNCIONA
     };
   }
 
-  const { customerId,amount , status } = validatedFields.data;
-  const amountInCents = amount * 100;
+  const { customerId, status } = validatedFields.data;
 
   try {
     await prisma.invoice.update({
-      where: { id: id },
+      where: { id },
       data: {
         customer_id: customerId,
-        amount: amountInCents,
-        status: status,
+        status,
       },
     });
   } catch (error) {
@@ -168,7 +149,7 @@ export async function updateInvoice( //MODIFICAR NO ME FUNCIONA
 
 export async function deleteInvoice(id: string) {
   await prisma.invoice.delete({
-    where: { id: id },
+    where: { id },
   });
   revalidatePath("/dashboard/invoices");
 }
@@ -202,9 +183,9 @@ export async function createCustomer(
   try {
     await prisma.customer.create({
       data: {
-        name: name,
-        email: email,
-        image_url: image_url,
+        name,
+        email,
+        image_url,
       },
     });
   } catch (error) {
@@ -220,15 +201,18 @@ export async function createCustomer(
 
 const UpdateCustomer = CustomerSchema;
 
-export async function updateCustomer(   //NO ME FUNCIONA
+export async function updateCustomer(
   id: string,
   prevState: CustomerState,
   formData: FormData
 ) {
+  const file = formData.get("image_url") as File | null;
+  const image_url = file?.size ? `/customers/${file.name}` : null;
+
   const validatedFields = UpdateCustomer.safeParse({
-    customerId: formData.get("customerId"),
     name: formData.get("name"),
     email: formData.get("email"),
+    image_url,
   });
 
   if (!validatedFields.success) {
@@ -242,10 +226,11 @@ export async function updateCustomer(   //NO ME FUNCIONA
 
   try {
     await prisma.customer.update({
-      where: { id: id },
+      where: { id },
       data: {
-        name: name,
-        email: email,
+        name,
+        email,
+        image_url,
       },
     });
   } catch (error) {
@@ -255,9 +240,10 @@ export async function updateCustomer(   //NO ME FUNCIONA
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
 }
+
 export async function deleteCustomer(id: string) {
   await prisma.customer.delete({
-    where: { id: id },
+    where: { id },
   });
   revalidatePath("/dashboard/customers");
 }
@@ -288,9 +274,9 @@ export async function createProduct(
   try {
     await prisma.product.create({
       data: {
-        name: name,
-        description: description,
-        price: price,
+        name,
+        description,
+        price,
       },
     });
   } catch (error) {
@@ -346,7 +332,7 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string) {
   await prisma.product.delete({
-    where: { id: id },
+    where: { id },
   });
   revalidatePath("/dashboard/products");
 }

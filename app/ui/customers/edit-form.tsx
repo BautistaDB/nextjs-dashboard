@@ -9,17 +9,15 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { updateInvoice, InvoicesState } from '@/app/lib/actions';
+import { updateInvoice, InvoicesState, CustomerState } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
-export default function EditInvoiceForm({
-  invoice,
-  customers,
+export default function EditCustomerForm({
+  customers
 }: {
-  invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
-   const initialState: InvoicesState = { message: null, errors: {} };
+   const initialState: CustomerState = { message: null, errors: {} };
   const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
   const [state, formAction] = useActionState(updateInvoiceWithId, initialState);
 

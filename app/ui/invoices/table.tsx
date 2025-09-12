@@ -5,6 +5,10 @@ import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import ProductModal from "../products/ProductModal";
 
+function invoiceTotal(products: { price: number | string }[]) {
+  return products.reduce((sum, p) => sum + Number(p.price), 0);
+}
+
 export default async function InvoicesTable({
   query,
   currentPage,
@@ -18,6 +22,7 @@ export default async function InvoicesTable({
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+          {/* Mobile (cards) */}
           <div className="md:hidden">
             {invoices.map((invoice) => (
               <div
@@ -28,7 +33,7 @@ export default async function InvoicesTable({
                   <div>
                     <div className="mb-2 flex items-center">
                       <Image
-                        src={invoice.customer.image_url}
+                        src={invoice.customer.image_url ?? "/customers/default.png"}
                         className="mr-2 rounded-full"
                         width={28}
                         height={28}
@@ -45,7 +50,7 @@ export default async function InvoicesTable({
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
                     <p className="text-xl font-medium">
-                      {formatCurrency(invoice.amount)}
+                      {formatCurrency(invoiceTotal(invoice.products))}
                     </p>
                     <p>{formatDateToLocal(invoice.date)}</p>
                     <p>{invoice.products.length}</p>
@@ -58,6 +63,8 @@ export default async function InvoicesTable({
               </div>
             ))}
           </div>
+
+          {/* Desktop (table) */}
           <table className="hidden min-w-full text-gray-900 md:table">
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
@@ -68,7 +75,7 @@ export default async function InvoicesTable({
                   Email
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Amount
+                  Total
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Date
@@ -93,7 +100,7 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
                       <Image
-                        src={invoice.customer.image_url!}
+                        src={invoice.customer.image_url ?? "/customers/default.png"}
                         className="rounded-full"
                         width={28}
                         height={28}
@@ -106,7 +113,7 @@ export default async function InvoicesTable({
                     {invoice.customer.email}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(invoice.amount)}
+                    {formatCurrency(invoiceTotal(invoice.products))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {formatDateToLocal(invoice.date)}
@@ -115,7 +122,10 @@ export default async function InvoicesTable({
                     <InvoiceStatus status={invoice.status} />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 flex items-center gap-2">
-                    <ProductModal invoiceId={invoice.id} count={invoice.products.length} />
+                    <ProductModal
+                      invoiceId={invoice.id}
+                      count={invoice.products.length}
+                    />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
@@ -127,6 +137,7 @@ export default async function InvoicesTable({
               ))}
             </tbody>
           </table>
+
         </div>
       </div>
     </div>
