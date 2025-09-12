@@ -7,22 +7,15 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { PrismaClient } from "generated";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 /* --------------  SCHEMAS ---------------- */
 
 const InvoiceSchema = z.object({
-  id: z.string(),
-  customerId: z.string({
-    invalid_type_error: "Please select a customer.",
-  }),
-  amount: z.coerce
-    .number()
-    .gt(0, { message: "Please enter an amount greater than $0." }),
-  status: z.enum(["pending", "paid"], {
-    invalid_type_error: "Please select an invoice status.",
-  }),
-  date: z.string(),
+  customerId: z.string().min(1),
+  productIds: z.array(z.string().min(1)).min(1, { message: "Selecciona por lo menos un vehículo" }),
+  status: z.enum(["pending", "paid"]),
+  amount: z.coerce.number(),
 });
 
 const CustomerSchema = z.object({
@@ -36,7 +29,7 @@ const ProductSchema = z.object({
   description: z.string().min(1, { message: "La descripcion es obligatoria" }),
   price: z.coerce
     .number()
-    .gt(0, { message: "Please enter an amount greater than $0." }),
+    .gt(0, { message: "Por favor, ingrese un monto maoyr a $0" }),
 });
 
 /* --------------  TYPES ---------------- */
@@ -53,6 +46,7 @@ export type CustomerState = {
 export type InvoicesState = {
   errors?: {
     customerId?: string[];
+    productIds?: string[];
     amount?: string[];
     status?: string[];
   };
@@ -70,7 +64,7 @@ export type ProductsState = {
 
 /* --------------  INVOICES ---------------- */
 
-const CreateInvoice = InvoiceSchema.omit({ id: true, date: true });
+const CreateInvoice = InvoiceSchema;
 
 export async function createInvoice(
   prevState: InvoicesState,
@@ -78,7 +72,7 @@ export async function createInvoice(
 ) {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
+    productIds: formData.getAll("productIds"),
     status: formData.get("status"),
   });
   if (!validatedFields.success) {
@@ -88,19 +82,42 @@ export async function createInvoice(
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split("T")[0];
+ const { customerId, productIds, status } = validatedFields.data;
 
   try {
-    await prisma.invoice.create({
-      data: {
-        customer_id: customerId,
-        amount: amountInCents,
-        status: status,
-        date: date,
-      },
+    await prisma.$transaction(async (tx) => {
+      // 1) Traer productos seleccionados que estén disponibles
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds }, invoice_id: null },
+        select: { id: true, price: true },
+      });
+      if (products.length !== productIds.length) {
+        throw new Error("Some selected products are not available.");
+      }
+
+       const amountInvoice = products.reduce((sum, product) => {
+        const price = typeof product.price === "number" ? product.price : Number(product.price);
+        return sum + Math.round(price); // cambia a Math.round(price * 100) si price está en $ con decimales
+      }, 0);
+
+            // 3) Crear invoice con FECHA ACTUAL
+      const invoice = await tx.invoice.create({
+        data: {
+          customer_id: customerId,
+          amount: amountInvoice,
+          status,
+          date: new Date(), 
+        },
+        select: { id: true },
+      });
+
+      // 4) Asociar todos los productos a esa invoice (marcar “sold”)
+      await tx.product.updateMany({
+        where: { id: { in: productIds }, invoice_id: null },
+        data: { invoice_id: invoice.id },
+      });
     });
+
   } catch (error) {
     console.error(error);
   }
@@ -109,9 +126,9 @@ export async function createInvoice(
   redirect("/dashboard/invoices");
 }
 
-const UpdateInvoice = InvoiceSchema.omit({ id: true, date: true });
+const UpdateInvoice = InvoiceSchema;
 
-export async function updateInvoice(
+export async function updateInvoice( //MODIFICAR NO ME FUNCIONA
   id: string,
   prevState: InvoicesState,
   formData: FormData
@@ -129,7 +146,7 @@ export async function updateInvoice(
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
+  const { customerId,amount , status } = validatedFields.data;
   const amountInCents = amount * 100;
 
   try {
@@ -158,14 +175,13 @@ export async function deleteInvoice(id: string) {
 
 /* --------------  CUSTOMERS ---------------- */
 
-const CreateCustomer = CustomerSchema.omit({});
+const CreateCustomer = CustomerSchema;
 
 export async function createCustomer(
   prevState: CustomerState,
   formData: FormData
 ) {
   const file = formData.get("image_url") as File | null;
-  console.log(file);
   const image_url = file?.size ? `/customers/${file.name}` : null;
 
   const validatedFields = CreateCustomer.safeParse({
@@ -202,9 +218,9 @@ export async function createCustomer(
   redirect("/dashboard/customers");
 }
 
-const UpdateCustomer = CreateCustomer.omit({});
+const UpdateCustomer = CustomerSchema;
 
-export async function updateCustomer(
+export async function updateCustomer(   //NO ME FUNCIONA
   id: string,
   prevState: CustomerState,
   formData: FormData
@@ -248,7 +264,7 @@ export async function deleteCustomer(id: string) {
 
 /* --------------  PRODUCTS ---------------- */
 
-const CreateProduct = ProductSchema.omit({});
+const CreateProduct = ProductSchema;
 
 export async function createProduct(
   prevState: ProductsState,
@@ -288,7 +304,7 @@ export async function createProduct(
   redirect("/dashboard/products");
 }
 
-const UpdateProduct = ProductSchema.omit({});
+const UpdateProduct = ProductSchema;
 
 export async function updateProduct(
   id: string,

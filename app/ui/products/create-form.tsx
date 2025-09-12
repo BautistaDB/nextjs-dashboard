@@ -2,11 +2,7 @@
 
 import { ProductField } from "@/app/lib/definitions";
 import Link from "next/link";
-import {
-  CheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-} from "@heroicons/react/24/outline";
+import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createProduct, ProductsState } from "@/app/lib/actions";
 import { useActionState } from "react";
@@ -82,7 +78,7 @@ export default function Form({ products }: { products: ProductField[] }) {
         >
           Cancel
         </Link>
-        <Button type="submit">Create Customer</Button>
+        <Button type="submit">Create Product</Button>
       </div>
     </form>
   );

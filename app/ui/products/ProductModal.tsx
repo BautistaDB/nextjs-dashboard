@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { Spinner } from "../spinner";
 import { Product } from "../../lib/definitions";
+import { formatCurrency } from "@/app/lib/utils";
 
 export default function ProductModal({
   invoiceId,
@@ -73,7 +74,7 @@ export default function ProductModal({
                     className="flex justify-between border-b pb-1 text-sm"
                   >
                     <span>{p.name}</span>
-                    <span>${Number(p.price)}</span>
+                    <span>{formatCurrency(Number(p.price))}</span>
                   </li>
                 ))
               ) : (

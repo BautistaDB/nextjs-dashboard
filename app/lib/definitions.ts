@@ -92,19 +92,22 @@ export type ProductForm = {
   name: string;
   description: string | null;
   price: number;
-  status: "Available" | "Sold";};
+  status: "Available" | "Sold";
+};
 
 export type Product = {
   id: string;
   name: string;
+  description: string | null;
   price: number;
   invoice_id: string | null;
-  status: "Available" | "Sold";
+  status: ProductStatus;
 };
 
 export type ProductField = {
   id: string;
   name: string;
+  price: number;
 };
 
 export type ProductsTable = {
@@ -114,3 +117,5 @@ export type ProductsTable = {
   price: number;
   status: 'Available' | 'Sold';
 };
+
+export type ProductStatus = "Available" | "Sold";

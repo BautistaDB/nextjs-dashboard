@@ -1,7 +1,7 @@
-// app/ui/products/table.tsx
 import { UpdateProduct, DeleteProduct } from "@/app/ui/products/buttons";
 import { formatCurrency } from "@/app/lib/utils";
 import { fetchFilteredProducts } from "@/app/lib/data";
+import { Product } from "@/app/lib/definitions";
 import ProductStatus from "@/app/ui/products/status";
 
 export default async function ProductsTable({
@@ -11,7 +11,7 @@ export default async function ProductsTable({
   query: string;
   currentPage: number;
 }) {
-  const products = await fetchFilteredProducts(query, currentPage);
+  const products: Product[] = await fetchFilteredProducts(query, currentPage);
 
   return (
     <div className="mt-6 flow-root">
@@ -36,7 +36,9 @@ export default async function ProductsTable({
                     {p.description}
                   </p>
                 ) : (
-                  <p className="mt-3 text-sm text-gray-400 italic">No description</p>
+                  <p className="mt-3 text-sm text-gray-400 italic">
+                    No description
+                  </p>
                 )}
 
                 <div className="mt-4 flex justify-end gap-2">
@@ -75,7 +77,7 @@ export default async function ProductsTable({
                     {p.description ?? "—"}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    ${p.price}
+                    {formatCurrency(p.price)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <ProductStatus status={p.status} />
@@ -91,7 +93,10 @@ export default async function ProductsTable({
 
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={5}
+                    className="py-10 text-center text-sm text-gray-500"
+                  >
                     No products found.
                   </td>
                 </tr>

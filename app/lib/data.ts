@@ -1,6 +1,6 @@
 import { formatCurrency } from "./utils";
 import { type Invoice, InvoiceStatus, PrismaClient } from "generated";
-import { type ProductForm } from "./definitions";
+import { type ProductForm, ProductStatus } from "./definitions";
 
 const prisma = new PrismaClient().$extends({
   result: {
@@ -71,9 +71,6 @@ export async function fetchLatestInvoices() {
 
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
     const invoiceCountPromise = await prisma.invoice.count();
     const customerCountPromise = await prisma.customer.count();
     const paidInvoicesPromise = await prisma.invoice.aggregate({
@@ -380,13 +377,13 @@ export async function fetchFilteredProducts(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const products = await prisma.product.findMany({
+    const prod = await prisma.product.findMany({
       select: {
         id: true,
         name: true,
         description: true,
         price: true,
-        status: true,
+        invoice_id: true,
       },
       where: {
         OR: [
@@ -399,9 +396,10 @@ export async function fetchFilteredProducts(
       skip: offset,
     });
 
-    const productsWithPrice = products.map((product) => ({
+    const productsWithPrice = prod.map((product) => ({
       ...product,
       price: Number(product.price),
+      status: (product.invoice_id ? "Sold" : "Available") as ProductStatus,
     }));
 
     return productsWithPrice;
@@ -439,8 +437,8 @@ export async function fetchProductById(
       id: true,
       name: true,
       description: true,
-      price: true, // Decimal
-      invoice_id: true, // si usás esto para derivar el status
+      price: true,
+      invoice_id: true,
     },
   });
 
@@ -450,10 +448,21 @@ export async function fetchProductById(
     id: p.id,
     name: p.name,
     description: p.description ?? "",
-    price:
-      typeof p.price === "object" && "toNumber" in p.price
-        ? (p.price as any).toNumber()
-        : Number(p.price),
+    price: typeof p.price === "number" ? p.price : Number(p.price),
     status: p.invoice_id ? "Sold" : "Available",
   };
+}
+
+export async function fetchProductsAvailable() {
+  const available = await prisma.product.findMany({
+    where: { invoice_id: null }, // disponibles = sin factura
+    select: { id: true, name: true, price: true },
+    orderBy: { name: "asc" },
+  });
+
+  return available.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: typeof p.price === "number" ? p.price : Number(p.price),
+  }));
 }
