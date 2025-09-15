@@ -3,6 +3,7 @@ import { lusitana } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import { CreateCustomer, UpdateCustomer, DeleteCustomer } from "./buttons";
 import { fetchFilteredCustomers } from "@/app/lib/data";
+import { formatCurrency } from "@/app/lib/utils";
 
 export default async function CustomersTable({
   customers,
@@ -51,13 +52,13 @@ export default async function CustomersTable({
                       <div className="flex w-1/2 flex-col">
                         <p className="text-xs">Pending</p>
                         <p className="font-medium">
-                          {customer.total?.pending ?? 0}
+                          {formatCurrency(customer.total?.pending ?? 0)}
                         </p>
                       </div>
                       <div className="flex w-1/2 flex-col">
                         <p className="text-xs">Paid</p>
                         <p className="font-medium">
-                          {customer.total?.paid ?? 0}
+                          {formatCurrency(customer.total?.paid ?? 0)}
                         </p>
                       </div>
                     </div>
@@ -114,10 +115,10 @@ export default async function CustomersTable({
                         {customer._count.invoices}
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
-                        ${customer.total?.pending ?? 0}
+                        {formatCurrency(customer.total?.pending ?? 0)}
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
-                        ${customer.total?.paid ?? 0}
+                        {formatCurrency(customer.total?.paid ?? 0)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3"></td>
                       <td className="whitespace-nowrap py-3 pl-6 pr-3">

@@ -205,40 +205,41 @@ export async function updateCustomer(
   id: string,
   prevState: CustomerState,
   formData: FormData
-) {
-  const file = formData.get("image_url") as File | null;
-  const image_url = file?.size ? `/customers/${file.name}` : null;
-
-  const validatedFields = UpdateCustomer.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    image_url,
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Invoice.",
-    };
-  }
-
-  const { name, email } = validatedFields.data;
-
+): Promise<CustomerState> {
   try {
+    const name = String(formData.get("name") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const imageFile = formData.get("image_url");
+
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { id },
+      select: { image_url: true },
+    });
+
+    if (!existingCustomer) {
+      return { message: "Customer not found", errors: {} };
+    }
+
+    let imageUrl = existingCustomer.image_url; // valor por defecto
+
+    if (imageFile && imageFile instanceof File && imageFile.size > 0) {
+      const uploadedUrl = `/uploads/${imageFile.name}`;
+      imageUrl = uploadedUrl;
+    }
+
     await prisma.customer.update({
       where: { id },
-      data: {
-        name,
-        email,
-        image_url,
-      },
+      data: { name, email, image_url: imageUrl },
     });
-  } catch (error) {
-    console.error(error);
+    
+  } catch (e) {
+    console.error(e);
+    return { message: "Failed to update customer", errors: {} };
   }
-
+  
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
+
 }
 
 export async function deleteCustomer(id: string) {
