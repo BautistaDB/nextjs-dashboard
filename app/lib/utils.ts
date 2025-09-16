@@ -32,21 +32,22 @@ export function formatDateToLocal(
 };
 
 export const generateYAxis = (revenue: Revenue[]) => {
-  // Tomar el valor máximo (no el mínimo)
+  // Tomar el valor máximo
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
-  // Redondear hacia arriba al múltiplo de 10k más cercano
-  const topLabel = Math.ceil(highestRecord / 10_000) * 10_000;
+  // Redondear hacia arriba al múltiplo de 1M más cercano
+  const topLabel = Math.ceil(highestRecord / 1_000_000) * 1_000_000;
 
   const yAxisLabels: string[] = [];
 
-  // Decrementar en pasos de 10k
-  for (let i = topLabel; i >= 0; i -= 10_000) {
-    yAxisLabels.push(`$${i / 1_000}K`);
+  // Decrementar en pasos de 1M
+  for (let i = topLabel; i >= 0; i -= 1_000_000) {
+    yAxisLabels.push(`$${i / 1_000_000}M`);
   }
 
   return { yAxisLabels, topLabel };
 };
+
 
 
 export const generatePagination = (currentPage: number, totalPages: number) => {

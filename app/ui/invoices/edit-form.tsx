@@ -72,6 +72,7 @@ export default function EditInvoiceForm({
                   type="checkbox"
                   name="productIds"
                   value={p.id}
+                  defaultChecked={p.status === "Sold"}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2"
                 />
                 <span>

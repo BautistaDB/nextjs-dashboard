@@ -1,33 +1,31 @@
+// app/dashboard/invoices/[id]/edit/page.tsx
 import Form from "@/app/ui/invoices/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchCustomers, fetchInvoiceById, fetchProductsAvailable } from "@/app/lib/data";
+import { fetchCustomers, fetchInvoiceEditData } from "@/app/lib/data";
 import { notFound } from "next/navigation";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const id = params.id;
-  const [invoice, customers, products] = await Promise.all([
-    fetchInvoiceById(id),
+  const { id } = await props.params;
+
+  const [editData, customers] = await Promise.all([
+    fetchInvoiceEditData(id), 
     fetchCustomers(),
-    fetchProductsAvailable(),
   ]);
-  if (!invoice) {
+
+  if (!editData) {
     notFound();
   }
+console.log(editData.products);
 
   return (
     <main>
       <Breadcrumbs
         breadcrumbs={[
           { label: "Invoices", href: "/dashboard/invoices" },
-          {
-            label: "Edit Invoice",
-            href: `/dashboard/invoices/${id}/edit`,
-            active: true,
-          },
+          { label: "Edit Invoice", href: `/dashboard/invoices/${id}/edit`, active: true },
         ]}
       />
-      <Form invoice={invoice} customers={customers} products={products} />
+      <Form invoice={editData.invoice} customers={customers} products={[...editData.products.map((product) => ({...product}))]} />
     </main>
   );
 }

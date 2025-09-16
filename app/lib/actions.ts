@@ -5,9 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { PrismaClient } from "generated";
-
-const prisma = new PrismaClient();
+import { prisma } from "./prisma";
 
 /* --------------  SCHEMAS ---------------- */
 
@@ -93,9 +91,6 @@ export async function createInvoice(
         products: {
           connect: productIds.map((id) => ({
             id,
-            // AND: {
-            //   invoice_id: null,
-            // },
           })),
         },
       },
@@ -113,36 +108,44 @@ const UpdateInvoice = InvoiceSchema;
 
 export async function updateInvoice(
   id: string,
-  prevState: InvoicesState,
+  _prev: any,
   formData: FormData
 ) {
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get("customerId"),
-    productIds: formData.getAll?.("productIds") ?? [],
     status: formData.get("status"),
+    productIds: formData.getAll("productIds") ?? []
   });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Update Invoice.",
-    };
+    if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors, message: "Campos inválidos." };
   }
 
-  const { customerId, status } = validatedFields.data;
+  const { customerId, status, productIds = [] } = validatedFields.data;
 
   try {
+    const options = await prisma.product.findMany({
+      where: { id: { in: productIds }, 
+      OR: [{ invoice_id: null },
+           { invoice_id: id }
+          ]},
+      select: { id: true },
+    });
+
+    const finalIds = options.map(p => p.id);
+
     await prisma.invoice.update({
       where: { id },
       data: {
         customer_id: customerId,
         status,
+        products: { set: finalIds.map(pid => ({ id: pid })) },
       },
     });
-  } catch (error) {
+
+  } catch (e) {
+    console.error("updateInvoice error:", e);
     return { message: "Database Error: Failed to Update Invoice." };
   }
-
   revalidatePath("/dashboard/invoices");
   redirect("/dashboard/invoices");
 }

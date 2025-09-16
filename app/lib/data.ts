@@ -1,38 +1,64 @@
 import { formatCurrency } from "./utils";
 import { type Invoice, InvoiceStatus, PrismaClient } from "generated";
-import { type ProductForm, ProductStatus } from "./definitions";
-
-const prisma = new PrismaClient().$extends({
-  result: {
-    product: {
-      status: {
-        compute: ({ invoice_id }) =>
-          invoice_id === null ? "available" : "sold",
-      },
-    },
-  },
-});
+import { type ProductForm, ProductStatus, Revenue } from "./definitions";
+import { prisma } from "./prisma"
 
 /* --------------  DASHBOARD  ---------------- */
 
-export async function fetchRevenue() {
-  try {
-    console.log("Fetching revenue data...");
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+const MONTHS = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
+] as const;
 
-    const data = await prisma.revenue.findMany();
+// export async function fetchRevenue() {
+//   try {
+//     console.log("Fetching revenue data...");
+//     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    console.log("Data fetch completed after 3 seconds.");
-    return data;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch revenue data.");
+//     const data = await prisma.revenue.findMany();
+
+//     console.log("Data fetch completed after 3 seconds.");
+//     return data;
+//   } catch (error) {
+//     console.error("Database Error:", error);
+//     throw new Error("Failed to fetch revenue data.");
+//   }
+// }
+export async function fetchRevenueForChart(): Promise<Revenue[]> {
+  const paid = await prisma.invoice.findMany({
+    where: { status: "paid" },
+    select: {
+      date: true,
+      products: { select: { price: true } },
+    },
+  });
+
+  const acc: Record<string, number> = Object.fromEntries(
+    MONTHS.map((m) => [m, 0])
+  );
+
+  for (const inv of paid) {
+    const d = new Date(inv.date);
+    const code = MONTHS[d.getUTCMonth()];
+    const total = inv.products.reduce((s, p) => s + Number(p.price), 0);
+    acc[code] += total;
   }
+
+  return MONTHS.map((m) => ({ month: m, revenue: acc[m] }));
 }
 
 export async function fetchLatestInvoices() {
   try {
-    // Ya no leemos 'amount' desde invoices; calculamos el total por productos
     const data = await prisma.invoice.findMany({
       take: 5,
       orderBy: { date: "desc" },
@@ -47,14 +73,11 @@ export async function fetchLatestInvoices() {
 
     const latestInvoices = data.map((invoice) => {
       const total =
-        invoice.products.reduce(
-          (sum, p) => sum + Number(p.price),
-          0
-        ) ?? 0;
+        invoice.products.reduce((sum, p) => sum + Number(p.price), 0) ?? 0;
 
       return {
         id: invoice.id,
-        amount: formatCurrency(total), // mantenemos la propiedad para no romper UI
+        amount: formatCurrency(total),
         name: invoice.customer.name,
         image_url: invoice.customer.image_url ?? "/customers/default.png",
         email: invoice.customer.email,
@@ -73,7 +96,6 @@ export async function fetchCardData() {
     const invoiceCountPromise = prisma.invoice.count();
     const customerCountPromise = prisma.customer.count();
 
-    // En vez de _sum.amount, sumamos precios de productos por estado de la invoice
     const paidInvoicesPromise = prisma.invoice.findMany({
       where: { status: "paid" },
       select: { products: { select: { price: true } } },
@@ -95,8 +117,7 @@ export async function fetchCardData() {
     const sumProducts = (invoices: { products: { price: any }[] }[]) =>
       invoices.reduce(
         (acc, inv) =>
-          acc +
-          inv.products.reduce((s, p) => s + Number(p.price), 0),
+          acc + inv.products.reduce((s, p) => s + Number(p.price), 0),
         0
       );
 
@@ -168,7 +189,6 @@ export async function fetchFilteredInvoices(
       skip: offset,
     });
 
-    // Calculamos total a partir de products.price (no columna amount)
     const invoicesWithAmount = invoices.map((invoice) => {
       const products = invoice.products.map((product) => ({
         ...product,
@@ -184,7 +204,7 @@ export async function fetchFilteredInvoices(
           image_url: invoice.customer.image_url ?? "/customers/default.png",
         },
         products,
-        amount, // valor derivado
+        amount,
       };
     });
 
@@ -228,20 +248,18 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
   try {
-    // Quitamos 'amount' del select
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       select: {
         id: true,
         customer_id: true,
         status: true,
-        products: { select: { price: true } }, // opcional, por si necesitás el total
+        products: { select: { price: true } },
       },
     });
 
     if (!invoice) return null;
 
-    // Si necesitás el total en el form, lo calculás aquí (no es columna)
     const total =
       invoice.products?.reduce((s, p) => s + Number(p.price), 0) ?? 0;
 
@@ -249,7 +267,7 @@ export async function fetchInvoiceById(id: string) {
       id: invoice.id,
       customer_id: invoice.customer_id,
       status: invoice.status,
-      total, // derivado; eliminar si no lo usás
+      total,
     };
   } catch (error) {
     console.error("Database Error:", error);
@@ -257,12 +275,52 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
+export async function fetchInvoiceEditData(invoiceId: string) {
+  const [invoice, products] = await Promise.all([
+    prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      select: {
+        id: true,
+        customer_id: true,
+        status: true,
+      },
+    }),
+    prisma.product.findMany({
+      where: {
+        OR: [
+          {
+            invoice_id: null,
+          },
+          {
+            invoice_id: invoiceId
+          }
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        description: true,
+        price: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  if (!invoice) return null;
+
+
+  return {
+    invoice,
+    products,
+  };
+}
 /* --------------  CUSTOMERS ---------------- */
 
 export async function fetchCustomers() {
   try {
     const customers = await prisma.customer.findMany({
-      select: { id: true, name: true },
+      select: { id: true, name: true, email: true, image_url: true },
       orderBy: { name: "asc" },
     });
 
@@ -394,6 +452,7 @@ export async function fetchFilteredProducts(
         description: true,
         price: true,
         invoice_id: true,
+        status: true,
       },
       where: {
         OR: [
@@ -409,7 +468,6 @@ export async function fetchFilteredProducts(
     const productsWithPrice = prod.map((product) => ({
       ...product,
       price: Number(product.price),
-      status: (product.invoice_id ? "Sold" : "Available") as ProductStatus,
     }));
 
     return productsWithPrice;
