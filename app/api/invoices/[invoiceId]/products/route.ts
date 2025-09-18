@@ -1,14 +1,12 @@
 // app/api/invoices/[invoiceId]/products/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "generated"; // ajusta este import a tu proyecto
-
-const prisma = new PrismaClient();
+import { prisma } from "@/app/lib/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { invoiceId: string } }
+  context: { params: Promise<{ invoiceId: string }> }
 ) {
-  const { invoiceId } = params;
+  const { invoiceId } = await context.params;
 
   try {
     const products = await prisma.product.findMany({
@@ -16,7 +14,7 @@ export async function GET(
       select: { id: true, name: true, price: true },    
     });
 
-    const totalAmount = products.reduce((acc, product) => acc + Number(product.price), 0);
+    const totalAmount = products.reduce((acc, product) => acc + (product.price), BigInt(0));
 
     return NextResponse.json({ ok: true, products, totalAmount });
   } catch (err) {

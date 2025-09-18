@@ -15,7 +15,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   if (!editData) {
     notFound();
   }
-console.log(editData.products);
 
   return (
     <main>

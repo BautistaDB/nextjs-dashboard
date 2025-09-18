@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomerField, ProductField } from "@/app/lib/definitions";
+import { CustomerTable, ProductFormat } from "@/app/lib/definitions";
 import Link from "next/link";
 import { CheckIcon, ClockIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { formatCurrency } from "@/app/lib/utils";
@@ -12,8 +12,8 @@ export default function Form({
   customers,
   products,
 }: {
-  customers: CustomerField[];
-  products: ProductField[];
+  customers: CustomerTable[];
+  products: ProductFormat[];
 }) {
   const initialState: InvoicesState = { message: null, errors: {} };
   const [state, formAction] = useActionState(createInvoice, initialState);

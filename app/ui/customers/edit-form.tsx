@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomerField, CustomerForm } from "@/app/lib/definitions";
+import { CustomerTable } from "@/app/lib/definitions";
 import {
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -12,7 +12,7 @@ import { useActionState } from 'react';
 export default function EditCustomerForm({
   customer
 }: {
-  customer: CustomerField;
+  customer: CustomerTable;
 }) {
   const initialState: CustomerState = { message: null, errors: {} };
   const updateCustomerWithId = updateCustomer.bind(null, customer.id);

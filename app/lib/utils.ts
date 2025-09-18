@@ -31,7 +31,7 @@ export function formatDateToLocal(
   return formatter.format(date);
 };
 
-export const generateYAxis = (revenue: Revenue[]) => {
+export const generateYAxis = (revenue: RevenueTable[]) => {
   // Tomar el valor máximo
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
@@ -82,3 +82,7 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+
+export function status({ invoice_id }: Pick<Product, "invoice_id">): ProductStatus{
+  return invoice_id === null ? "Available" : "Sold";
+}

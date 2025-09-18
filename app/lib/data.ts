@@ -1,6 +1,6 @@
 import { formatCurrency } from "./utils";
-import { type Invoice, InvoiceStatus, PrismaClient } from "generated";
-import { type ProductForm, ProductStatus, Revenue } from "./definitions";
+import { type Invoice, InvoiceStatus } from "generated";
+import { type ProductFormat, RevenueTable } from "./definitions";
 import { prisma } from "./prisma"
 
 /* --------------  DASHBOARD  ---------------- */
@@ -34,7 +34,7 @@ const MONTHS = [
 //     throw new Error("Failed to fetch revenue data.");
 //   }
 // }
-export async function fetchRevenueForChart(): Promise<Revenue[]> {
+export async function fetchRevenueForChart(): Promise<RevenueTable[]> {
   const paid = await prisma.invoice.findMany({
     where: { status: "paid" },
     select: {
@@ -283,6 +283,7 @@ export async function fetchInvoiceEditData(invoiceId: string) {
         id: true,
         customer_id: true,
         status: true,
+        date: true,
       },
     }),
     prisma.product.findMany({
@@ -299,9 +300,9 @@ export async function fetchInvoiceEditData(invoiceId: string) {
       select: {
         id: true,
         name: true,
-        status: true,
         description: true,
         price: true,
+        invoice_id: true,
       },
       orderBy: { name: "asc" },
     }),
@@ -314,7 +315,8 @@ export async function fetchInvoiceEditData(invoiceId: string) {
     invoice,
     products,
   };
-}
+};
+
 /* --------------  CUSTOMERS ---------------- */
 
 export async function fetchCustomers() {
@@ -381,7 +383,6 @@ export async function fetchFilteredCustomers(query: string) {
 
 export async function fetchCustomerById(id: string) {
   try {
-    // Quitamos 'amount' del select
     const customer = await prisma.customer.findUnique({
       where: { id },
       select: {
@@ -445,14 +446,13 @@ export async function fetchFilteredProducts(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const prod = await prisma.product.findMany({
+    return await prisma.product.findMany({
       select: {
         id: true,
         name: true,
         description: true,
         price: true,
         invoice_id: true,
-        status: true,
       },
       where: {
         OR: [
@@ -465,12 +465,6 @@ export async function fetchFilteredProducts(
       skip: offset,
     });
 
-    const productsWithPrice = prod.map((product) => ({
-      ...product,
-      price: Number(product.price),
-    }));
-
-    return productsWithPrice;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoices.");
@@ -495,8 +489,8 @@ export async function fetchProductsPages(query: string) {
 
 export async function fetchProductById(
   id: string
-): Promise<ProductForm | null> {
-  const p = await prisma.product.findUnique({
+): Promise<ProductFormat | null> {
+  return await prisma.product.findUnique({
     where: { id },
     select: {
       id: true,
@@ -506,28 +500,13 @@ export async function fetchProductById(
       invoice_id: true,
     },
   });
-
-  if (!p) return null;
-
-  return {
-    id: p.id,
-    name: p.name,
-    description: p.description ?? "",
-    price: typeof p.price === "number" ? p.price : Number(p.price),
-    status: p.invoice_id ? "sold" : "available",
-  };
 }
 
 export async function fetchProductsAvailable() {
-  const available = await prisma.product.findMany({
+  return await prisma.product.findMany({
     where: { invoice_id: null },
     select: { id: true, name: true, price: true },
     orderBy: { name: "asc" },
   });
 
-  return available.map((p) => ({
-    id: p.id,
-    name: p.name,
-    price: typeof p.price === "number" ? p.price : Number(p.price),
-  }));
 }

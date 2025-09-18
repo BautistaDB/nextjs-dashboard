@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { Spinner } from "../spinner";
-import { Product } from "../../lib/definitions";
+import { ProductFormat } from "../../lib/definitions";
 import { formatCurrency } from "@/app/lib/utils";
 
 export default function ProductModal({
@@ -14,7 +14,7 @@ export default function ProductModal({
   count: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [products, setProducts] = useState<Product[] | null>(null);
+  const [products, setProducts] = useState<ProductFormat[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

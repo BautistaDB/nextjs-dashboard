@@ -1,13 +1,13 @@
 "use client";
 
-import { ProductField } from "@/app/lib/definitions";
+import { ProductFormat } from "@/app/lib/definitions";
 import Link from "next/link";
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createProduct, ProductsState } from "@/app/lib/actions";
 import { useActionState } from "react";
 
-export default function Form({ products }: { products: ProductField[] }) {
+export default function Form({ products }: { products: ProductFormat[] }) {
   const initialState: ProductsState = { message: null, errors: {} };
   const [state, formAction] = useActionState(createProduct, initialState);
 

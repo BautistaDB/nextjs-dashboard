@@ -1,7 +1,7 @@
 import { UpdateProduct, DeleteProduct } from "@/app/ui/products/buttons";
-import { formatCurrency } from "@/app/lib/utils";
+import { formatCurrency, status } from "@/app/lib/utils";
 import { fetchFilteredProducts } from "@/app/lib/data";
-import { Product } from "@/app/lib/definitions";
+import { ProductFormat } from "@/app/lib/definitions";
 import ProductStatus from "@/app/ui/products/status";
 
 export default async function ProductsTable({
@@ -11,7 +11,7 @@ export default async function ProductsTable({
   query: string;
   currentPage: number;
 }) {
-  const products: Product[] = await fetchFilteredProducts(query, currentPage);
+  const products: ProductFormat[] = await fetchFilteredProducts(query, currentPage);
 
   return (
     <div className="mt-6 flow-root">
@@ -24,7 +24,7 @@ export default async function ProductsTable({
                 <div className="flex items-center justify-between border-b pb-3">
                   <h3 className="text-base font-medium">{p.name}</h3>
                   <div className="flex items-center gap-2">
-                    <ProductStatus status={p.status} />
+                    <ProductStatus status={status(p)} />
                     <span className="text-sm font-semibold">
                       ${p.price}
                     </span>
@@ -80,7 +80,7 @@ export default async function ProductsTable({
                     {formatCurrency(p.price)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    <ProductStatus status={p.status} />
+                    <ProductStatus status={status(p)} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
