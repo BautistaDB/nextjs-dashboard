@@ -10,23 +10,25 @@ datasource db {
 }
 
 model Customer {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String    @db.VarChar(255)
+  email     String    @db.VarChar(255)
+  image_url String?   @db.VarChar(255)
+  invoices  Invoice[]
+
   @@map("customers")
-  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String @db.VarChar(255)
-  email     String @db.VarChar(255)
-  image_url String? @db.VarChar(255)
-  invoices  Invoice[]  
 }
 
 model Invoice {
-  @@map("invoices")
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customer_id String     @db.Uuid
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customer_id String        @db.Uuid
   status      InvoiceStatus @default(pending)
-  date        DateTime   @db.Date
+  date        DateTime      @db.Date
   products    Product[]
 
-  customer   Customer @relation(fields: [customer_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  customer Customer @relation(fields: [customer_id], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@map("invoices")
 }
 
 enum InvoiceStatus {
@@ -35,27 +37,30 @@ enum InvoiceStatus {
 }
 
 model Product {
-  @@map("products")
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String    @db.VarChar(255)
   description String?
-  price       BigInt   
+  price       BigInt
   invoice_id  String?   @db.Uuid
   created_at  DateTime? @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
-  invoice    Invoice? @relation(fields: [invoice_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoice     Invoice?  @relation(fields: [invoice_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("products")
 }
 
 model Revenue {
-  @@map("revenue")
   month   String @unique @db.VarChar(4)
   revenue Int
+
+  @@map("revenue")
 }
 
 model User {
-  @@map("users")
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name     String @db.VarChar(255)
   email    String @unique
   password String
+
+  @@map("users")
 }
