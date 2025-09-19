@@ -6,7 +6,7 @@ import { CheckIcon, ClockIcon, UserCircleIcon } from "@heroicons/react/24/outlin
 import { formatCurrency } from "@/app/lib/utils";
 import { Button } from "@/app/ui/button";
 import { createInvoice, InvoicesState } from "@/app/lib/actions";
-import { useActionState } from "react";
+import { useAction } from "next-safe-action/hooks";
 
 export default function Form({
   customers,
@@ -16,10 +16,13 @@ export default function Form({
   products: ProductFormat[];
 }) {
   const initialState: InvoicesState = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createInvoice, initialState);
+  // const [state, formAction] = useActionState(createInvoice, initialState);
+  const { execute } = useAction(createInvoice);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} onSubmit={() => {
+      execute()
+    }}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer */}
         <div className="mb-4">

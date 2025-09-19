@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { prisma } from "./prisma";
+import { action } from "./safe-actions";
 
 /* --------------  SCHEMAS ---------------- */
 
@@ -81,28 +82,32 @@ export async function createInvoice(
   }
 
   const { customerId, productIds, status } = validatedFields.data;
-
-  try {
-    const invoice = await prisma.invoice.create({
-      data: {
-        customer_id: customerId,
-        status,
-        date: new Date(),
-        products: {
-          connect: productIds.map((id) => ({
-            id,
-          })),
+// export const createInvoice = action
+//   .inputSchema(CreateInvoice)
+//   .action(async ({ parsedInput }) => {
+//     const { customerId, productIds, status } = parsedInput;
+    try {
+      const invoice = await prisma.invoice.create({
+        data: {
+          customer_id: customerId,
+          status,
+          date: new Date(),
+          products: {
+            connect: productIds.map((id) => ({
+              id,
+            })),
+          },
         },
-      },
-      select: { id: true },
-    });
-  } catch (error) {
-    console.error(error);
-  }
+        select: { id: true },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new Error("Ocurrió un error inesperado, contacte a administración");
+    }
 
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
-}
+    revalidatePath("/dashboard/invoices");
+    redirect("/dashboard/invoices");
+  }
 
 const UpdateInvoice = InvoiceSchema;
 
@@ -114,34 +119,36 @@ export async function updateInvoice(
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get("customerId"),
     status: formData.get("status"),
-    productIds: formData.getAll("productIds") ?? []
+    productIds: formData.getAll("productIds") ?? [],
   });
-    if (!validatedFields.success) {
-    return { errors: validatedFields.error.flatten().fieldErrors, message: "Campos inválidos." };
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Campos inválidos.",
+    };
   }
 
   const { customerId, status, productIds = [] } = validatedFields.data;
 
   try {
     const options = await prisma.product.findMany({
-      where: { id: { in: productIds }, 
-      OR: [{ invoice_id: null },
-           { invoice_id: id }
-          ]},
+      where: {
+        id: { in: productIds },
+        OR: [{ invoice_id: null }, { invoice_id: id }],
+      },
       select: { id: true },
     });
 
-    const finalIds = options.map(p => p.id);
+    const finalIds = options.map((p) => p.id);
 
     await prisma.invoice.update({
       where: { id },
       data: {
         customer_id: customerId,
         status,
-        products: { set: finalIds.map(pid => ({ id: pid })) },
+        products: { set: finalIds.map((pid) => ({ id: pid })) },
       },
     });
-
   } catch (e) {
     console.error("updateInvoice error:", e);
     return { message: "Database Error: Failed to Update Invoice." };
@@ -234,15 +241,13 @@ export async function updateCustomer(
       where: { id },
       data: { name, email, image_url: imageUrl },
     });
-    
   } catch (e) {
     console.error(e);
     return { message: "Failed to update customer", errors: {} };
   }
-  
+
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
-
 }
 
 export async function deleteCustomer(id: string) {

@@ -2,18 +2,16 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
-import type { User } from "@/app/lib/definitions";
+import type { UserTable } from "@/app/lib/definitions";
 import bcrypt from "bcrypt";
-import { PrismaClient } from "generated";
+import { prisma } from "@/app/lib/prisma";
 
-const prisma = new PrismaClient()
-
-async function getUser(email: string): Promise<User | undefined> {
+async function getUser(email: string): Promise<UserTable | undefined> {
   try {
     const data = await prisma.user.findMany({
       where: { email: email }
     });
-      return data[0] as User | undefined;
+      return data[0] as UserTable | undefined;
     } catch (error) {
       console.error("Failed to fetch user:", error);
       throw new Error("Failed to fetch user.");

@@ -37,7 +37,7 @@ export const generateYAxis = (revenue: RevenueTable[]) => {
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
   // Redondear hacia arriba al múltiplo de 1M más cercano
-  const topLabel = Math.ceil(highestRecord / 5_000_000) * 5_000_000;
+  const topLabel = Math.ceil(highestRecord / 1_000_000) * 1_000_000;
 
   const yAxisLabels: string[] = [];
 
