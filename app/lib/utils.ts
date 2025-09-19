@@ -1,6 +1,7 @@
-import { Revenue } from './definitions';
+import { Product } from '@/generated';
+import { RevenueTable, ProductStatus } from './definitions';
 
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number | bigint) => {
   return (amount).toLocaleString("es-AR", {
     style: "currency",
     currency: "ARS",

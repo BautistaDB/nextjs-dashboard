@@ -105,8 +105,8 @@ export default async function CustomersTable({
                             width={28}
                             height={28}
                           />
-                          <p>{customer.name}</p>
                         </div>
+                          <p>{customer.name}</p>
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
                         {customer.email}
@@ -129,7 +129,7 @@ export default async function CustomersTable({
                       </td>
                     </tr>
                   ))}
-                </tbody>
+                  </tbody>
               </table>
             </div>
           </div>

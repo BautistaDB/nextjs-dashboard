@@ -39,7 +39,7 @@ model Product {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String    @db.VarChar(255)
   description String?
-  price       Decimal   @db.Decimal(10, 2)
+  price       BigInt   
   invoice_id  String?   @db.Uuid
   created_at  DateTime? @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
