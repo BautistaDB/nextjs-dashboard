@@ -95,7 +95,7 @@ export default async function CustomersTable({
 
                 <tbody className="divide-y divide-gray-200 text-gray-900">
                   {customers.map((customer) => (
-                    <tr key={customer.id} className="group">
+                    <tr key={customer.id} className="mb-2 w-full rounded-md bg-white p-4">
                       <td className="whitespace-nowrap bg-white py-5 pl-4 pr-3 text-sm text-black group-first-of-type:rounded-md group-last-of-type:rounded-md sm:pl-6">
                         <div className="flex items-center gap-3">
                           <Image
@@ -105,8 +105,8 @@ export default async function CustomersTable({
                             width={28}
                             height={28}
                           />
-                        </div>
                           <p>{customer.name}</p>
+                        </div>
                       </td>
                       <td className="whitespace-nowrap bg-white px-4 py-5 text-sm">
                         {customer.email}

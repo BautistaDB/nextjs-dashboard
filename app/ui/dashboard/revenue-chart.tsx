@@ -3,15 +3,9 @@ import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
 import { fetchRevenueForChart } from '@/app/lib/data';
 
-// This component is representational only.
-// For data visualization UI, check out:
-// https://www.tremor.so/
-// https://www.chartjs.org/
-// https://airbnb.io/visx/
-
 export default async function RevenueChart() {
   const revenue = await fetchRevenueForChart();
-  const chartHeight = 475;
+  const chartHeight = 350;
 
   const { yAxisLabels, topLabel } = generateYAxis(revenue);
 

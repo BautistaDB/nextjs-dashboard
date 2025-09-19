@@ -37,19 +37,17 @@ export const generateYAxis = (revenue: RevenueTable[]) => {
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
   // Redondear hacia arriba al múltiplo de 1M más cercano
-  const topLabel = Math.ceil(highestRecord / 1_000_000) * 1_000_000;
+  const topLabel = Math.ceil(highestRecord / 5_000_000) * 5_000_000;
 
   const yAxisLabels: string[] = [];
 
   // Decrementar en pasos de 1M
-  for (let i = topLabel; i >= 0; i -= 1_000_000) {
-    yAxisLabels.push(`$${i / 1_000_000}M`);
+  for (let i = topLabel; i >= 0; i -= 5_000_000) {
+    yAxisLabels.push(`$${i / 5_000_000}M`);
   }
 
   return { yAxisLabels, topLabel };
 };
-
-
 
 export const generatePagination = (currentPage: number, totalPages: number) => {
   // If the total number of pages is 7 or less,

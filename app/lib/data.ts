@@ -20,20 +20,6 @@ const MONTHS = [
   "DEC",
 ] as const;
 
-// export async function fetchRevenue() {
-//   try {
-//     console.log("Fetching revenue data...");
-//     await new Promise((resolve) => setTimeout(resolve, 3000));
-
-//     const data = await prisma.revenue.findMany();
-
-//     console.log("Data fetch completed after 3 seconds.");
-//     return data;
-//   } catch (error) {
-//     console.error("Database Error:", error);
-//     throw new Error("Failed to fetch revenue data.");
-//   }
-// }
 export async function fetchRevenueForChart(): Promise<RevenueTable[]> {
   const paid = await prisma.invoice.findMany({
     where: { status: "paid" },
@@ -505,7 +491,7 @@ export async function fetchProductById(
 export async function fetchProductsAvailable() {
   return await prisma.product.findMany({
     where: { invoice_id: null },
-    select: { id: true, name: true, price: true },
+    select: { id: true, name: true, price: true, description: true, invoice_id: true},
     orderBy: { name: "asc" },
   });
 
