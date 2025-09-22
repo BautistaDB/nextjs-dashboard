@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
 import { updateInvoice, InvoicesState } from "@/app/lib/actions";
-import { useActionState } from "react";
+import { useAction } from "next-safe-action/hooks";
 import { formatCurrency, status } from "@/app/lib/utils";
 
 export default function EditInvoiceForm({
@@ -21,15 +21,24 @@ export default function EditInvoiceForm({
   customers: CustomerTable[];
   products: ProductFormat[];
 }) {
-  const initialState: InvoicesState = { message: null, errors: {} };
-  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
-  const [state, formAction] = useActionState(updateInvoiceWithId, initialState);
+  const { execute, result } = useAction(updateInvoice);
 
   return (
-    <form action={formAction}>
+    <form onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const input = {
+          id: String(fd.get("id") ?? ""),
+          customerId: String(fd.get("customerId") ?? ""),
+          status: String(fd.get("status") ?? "") as "pending" | "paid",
+          productIds: fd.getAll("productIds").map(String),
+        };
+        execute(input);
+      }}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
+          <input type="hidden" name="id" value={invoice.id} />
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
             Choose customer
           </label>
@@ -60,7 +69,7 @@ export default function EditInvoiceForm({
           <div
             className="space-y-2 rounded-md border border-gray-200 bg-white p-3"
             aria-describedby={
-              state.errors?.productIds ? "products-error" : undefined
+              result.validationErrors?.productIds ? "products-error" : undefined
             }
           >
             {products.map((p) => (
@@ -80,11 +89,7 @@ export default function EditInvoiceForm({
                 </span>
               </label>
             ))}
-            {state.errors?.productIds && (
-              <p id="products-error" className="mt-1 text-sm text-red-600">
-                {state.errors.productIds}
-              </p>
-            )}
+
           </div>
         </div>
 

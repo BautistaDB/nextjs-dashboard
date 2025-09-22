@@ -2,11 +2,17 @@
 
 import { CustomerTable, ProductFormat } from "@/app/lib/definitions";
 import Link from "next/link";
-import { CheckIcon, ClockIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ClockIcon,
+  UserCircleIcon,
+} from "@heroicons/react/24/outline";
 import { formatCurrency } from "@/app/lib/utils";
 import { Button } from "@/app/ui/button";
-import { createInvoice, InvoicesState } from "@/app/lib/actions";
+import { createInvoice } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { Status } from "@/app/lib/definitions";
 
 export default function Form({
   customers,
@@ -15,14 +21,24 @@ export default function Form({
   customers: CustomerTable[];
   products: ProductFormat[];
 }) {
-  const initialState: InvoicesState = { message: null, errors: {} };
-  // const [state, formAction] = useActionState(createInvoice, initialState);
-  const { execute } = useAction(createInvoice);
+  const [customerId, setCustomerId] = useState("");
+  const [status, setStatus] = useState<Status>("pending");
+  const [productIds, setproductIds] = useState("");
+  const { execute, result } = useAction(createInvoice);
 
   return (
-    <form action={formAction} onSubmit={() => {
-      execute()
-    }}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const input = {
+          customerId,
+          status,
+          productIds,
+        };
+        execute(input);
+      }}
+    >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer */}
         <div className="mb-4">
@@ -35,8 +51,12 @@ export default function Form({
               name="customerId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               defaultValue=""
-              aria-describedby={state.errors?.customerId ? "customer-error" : undefined}
-              aria-invalid={!!state.errors?.customerId}
+              aria-describedby={
+                result.validationErrors?.customerId
+                  ? "customer-error"
+                  : undefined
+              }
+              aria-invalid={!!result.validationErrors?.customerId}
               required
             >
               <option value="" disabled>
@@ -50,22 +70,24 @@ export default function Form({
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
-          {state.errors?.customerId && (
-            <p id="customer-error" className="mt-1 text-sm text-red-600">
-              {state.errors.customerId}
-            </p>
-          )}
         </div>
 
         {/* Products */}
         <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium">Choose products</label>
+          <label className="mb-2 block text-sm font-medium">
+            Choose products
+          </label>
           <div
             className="space-y-2 rounded-md border border-gray-200 bg-white p-3"
-            aria-describedby={state.errors?.productIds ? "products-error" : undefined}
+            aria-describedby={
+              result.validationErrors?.productIds ? "products-error" : undefined
+            }
           >
             {products.map((p) => (
-              <label key={p.id} className="flex items-center space-x-2 text-sm cursor-pointer">
+              <label
+                key={p.id}
+                className="flex items-center space-x-2 text-sm cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   name="productIds"
@@ -77,17 +99,14 @@ export default function Form({
                 </span>
               </label>
             ))}
-          {state.errors?.productIds && (
-            <p id="products-error" className="mt-1 text-sm text-red-600">
-              {state.errors.productIds}
-            </p>
-          )}
           </div>
         </div>
 
         {/* Invoice Status */}
         <fieldset>
-          <legend className="mb-2 block text-sm font-medium">Set the invoice status</legend>
+          <legend className="mb-2 block text-sm font-medium">
+            Set the invoice status
+          </legend>
           <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
             <div className="flex gap-4">
               <div className="flex items-center">
@@ -111,7 +130,7 @@ export default function Form({
                   id="paid"
                   name="status"
                   type="radio"
-                  value="paid" 
+                  value="paid"
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
                 />
                 <label
@@ -124,15 +143,6 @@ export default function Form({
             </div>
           </div>
         </fieldset>
-
-        {state.errors?.status && (
-          <p className="mt-1 text-sm text-red-600" id="status-error">
-            {state.errors.status}
-          </p>
-        )}
-        {state.message && (
-          <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{state.message}</p>
-        )}
       </div>
 
       <div className="mt-6 flex justify-end gap-4">

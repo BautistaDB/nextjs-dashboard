@@ -11,3 +11,5 @@ export type RevenueTable = Pick<Revenue, "month" | "revenue">
 export type ProductFormat = Pick<Product, "id" | "name" | "price" | "description" | "invoice_id">
 
 export type ProductStatus = "Available" | "Sold";
+
+export type Status = "pending" | "paid";
