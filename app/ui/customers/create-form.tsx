@@ -8,19 +8,18 @@ import { createCustomer } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 
-export default function Form({ customers }: { customers: CustomerTable[] }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export default function Form({ customer }: { customer: CustomerTable }) {
+  const [name, setName] = useState(customer.name);
+  const [email, setEmail] = useState(customer.email);
   const [image, setImage] = useState<File | null>(null);
 
-  const { execute, result } = useAction(createCustomer);
+  const { execute } = useAction(createCustomer);
 
   return (
     <>
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          const fd = new FormData(e.currentTarget);
           const input = {
             name,
             email,
@@ -83,7 +82,7 @@ export default function Form({ customers }: { customers: CustomerTable[] }) {
                   type="file"
                   placeholder="input customer Image"
                   className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                  onChange={(e) => setImage}
+                  onChange={(e) => setImage(e.target.files?.[0] ?? null)}
                 />
               </div>
             </div>

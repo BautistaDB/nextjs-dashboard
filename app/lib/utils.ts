@@ -82,6 +82,6 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
   ];
 };
 
-export function status({ invoice_id }: Pick<Product, "invoice_id">): ProductStatus{
+export function prodStatus({ invoice_id }: Pick<Product, "invoice_id">): ProductStatus{
   return invoice_id === null ? "Available" : "Sold";
 }

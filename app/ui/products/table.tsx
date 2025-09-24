@@ -1,5 +1,5 @@
 import { UpdateProduct, DeleteProduct } from "@/app/ui/products/buttons";
-import { formatCurrency, status } from "@/app/lib/utils";
+import { formatCurrency, prodStatus } from "@/app/lib/utils";
 import { fetchFilteredProducts } from "@/app/lib/data";
 import { ProductFormat } from "@/app/lib/definitions";
 import ProductStatus from "@/app/ui/products/status";
@@ -24,7 +24,7 @@ export default async function ProductsTable({
                 <div className="flex items-center justify-between border-b pb-3">
                   <h3 className="text-base font-medium">{p.name}</h3>
                   <div className="flex items-center gap-2">
-                    <ProductStatus status={status(p)} />
+                    <ProductStatus status={prodStatus(p)} />
                     <span className="text-sm font-semibold">
                       ${p.price}
                     </span>
@@ -80,7 +80,7 @@ export default async function ProductsTable({
                     {formatCurrency(p.price)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    <ProductStatus status={status(p)} />
+                    <ProductStatus status={prodStatus(p)} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">

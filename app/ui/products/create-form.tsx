@@ -5,14 +5,29 @@ import Link from "next/link";
 import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createProduct, ProductsState } from "@/app/lib/actions";
-import { useActionState } from "react";
+import { useState } from "react";
+import { useAction } from "next-safe-action/hooks";
 
-export default function Form({ products }: { products: ProductFormat[] }) {
+export default function Form({ products }: { products: ProductFormat }) {
   const initialState: ProductsState = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createProduct, initialState);
+  const [name, setName] = useState(products.name);
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState(products.price);
+
+  const { execute } = useAction(createProduct);
 
   return (
-    <form action={formAction}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const input = {
+          name,
+          description,
+          price,
+        };
+        execute(input);
+      }}
+    >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -26,6 +41,7 @@ export default function Form({ products }: { products: ProductFormat[] }) {
               type="text"
               placeholder="Enter product Name"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
         </div>
@@ -46,6 +62,7 @@ export default function Form({ products }: { products: ProductFormat[] }) {
                 type="text"
                 placeholder="Enter product description"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
           </div>
@@ -65,6 +82,7 @@ export default function Form({ products }: { products: ProductFormat[] }) {
                 type="text"
                 placeholder="Enter product price"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                onChange={(e) => setPrice(/*completar */)}
               />
             </div>
           </div>

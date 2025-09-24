@@ -1,6 +1,11 @@
 "use client";
 
-import { CustomerTable, InvoiceTable, ProductFormat } from "@/app/lib/definitions";
+import {
+  CustomerTable,
+  InvoiceTable,
+  ProductFormat,
+  Status,
+} from "@/app/lib/definitions";
 import {
   CheckIcon,
   ClockIcon,
@@ -8,37 +13,47 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { updateInvoice, InvoicesState } from "@/app/lib/actions";
+import { updateInvoice } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
-import { formatCurrency, status } from "@/app/lib/utils";
+import { formatCurrency, prodStatus } from "@/app/lib/utils";
+import { useState } from "react";
 
 export default function EditInvoiceForm({
   invoice,
   customers,
-  products
+  products,
 }: {
   invoice: InvoiceTable;
   customers: CustomerTable[];
   products: ProductFormat[];
 }) {
+  const [id] = useState(invoice.id);
+  const [customerId, setCustomerId] = useState(invoice.customer_id);
+  const [status, setStatus] = useState<Status>("pending");
+  const [productIds, setProductIds] = useState<string[]>([]);
   const { execute, result } = useAction(updateInvoice);
 
   return (
-    <form onSubmit={(e) => {
+    <form
+      onSubmit={(e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
         const input = {
-          id: String(fd.get("id") ?? ""),
-          customerId: String(fd.get("customerId") ?? ""),
-          status: String(fd.get("status") ?? "") as "pending" | "paid",
-          productIds: fd.getAll("productIds").map(String),
+          id,
+          customerId,
+          status,
+          productIds,
         };
         execute(input);
-      }}>
+      }}
+    >
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
-          <input type="hidden" name="id" value={invoice.id} />
+          <input
+            type="hidden"
+            name="id"
+            value={id}
+          />
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
             Choose customer
           </label>
@@ -48,6 +63,7 @@ export default function EditInvoiceForm({
               name="customerId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               defaultValue={invoice.customer_id}
+              onChange={(e) => setCustomerId(e.target.value)}
             >
               <option value="" disabled>
                 Select a customer
@@ -81,15 +97,19 @@ export default function EditInvoiceForm({
                   type="checkbox"
                   name="productIds"
                   value={p.id}
-                  defaultChecked={status(p) === "Sold"}
+                  defaultChecked={prodStatus(p) === "Sold"}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setProductIds([...productIds, e.target.value]);
+                    }
+                  }}
                 />
                 <span>
                   {p.name} — {formatCurrency(p.price)}
                 </span>
               </label>
             ))}
-
           </div>
         </div>
 
@@ -108,6 +128,7 @@ export default function EditInvoiceForm({
                   value="pending"
                   defaultChecked={invoice.status === "pending"}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  onChange={(e) => setStatus(e.currentTarget.value as Status)}
                 />
                 <label
                   htmlFor="pending"
@@ -124,6 +145,7 @@ export default function EditInvoiceForm({
                   value="paid"
                   defaultChecked={invoice.status === "paid"}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  onChange={(e) => setStatus(e.currentTarget.value as Status)}
                 />
                 <label
                   htmlFor="paid"

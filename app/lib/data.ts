@@ -375,6 +375,7 @@ export async function fetchCustomerById(id: string) {
         id: true,
         name: true,
         email: true,
+        image_url: true,
       },
     });
 
@@ -384,6 +385,7 @@ export async function fetchCustomerById(id: string) {
       id: customer.id,
       name: customer.name,
       email: customer.email,
+      image_url: customer.image_url,
     };
   } catch (error) {
     console.error("Database Error:", error);
@@ -401,7 +403,7 @@ export type ProductRow = {
   status: "Available" | "Sold";
 };
 
-export async function fetchProducts(): Promise<ProductRow[]> {
+export async function fetchProducts(): Promise<ProductFormat[]> {
   const rows = await prisma.product.findMany({
     select: {
       id: true,
@@ -421,7 +423,7 @@ export async function fetchProducts(): Promise<ProductRow[]> {
       typeof p.price === "object" && p.price !== null && "toNumber" in p.price
         ? (p.price as any).toNumber()
         : Number(p.price),
-    status: p.invoice_id === null ? "Available" : "Sold",
+    invoice_id: p.invoice_id,
   }));
 }
 

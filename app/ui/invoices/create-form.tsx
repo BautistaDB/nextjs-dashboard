@@ -23,14 +23,13 @@ export default function Form({
 }) {
   const [customerId, setCustomerId] = useState("");
   const [status, setStatus] = useState<Status>("pending");
-  const [productIds, setproductIds] = useState("");
+  const [productIds, setProductIds] = useState<string[]>([]);
   const { execute, result } = useAction(createInvoice);
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
         const input = {
           customerId,
           status,
@@ -51,6 +50,7 @@ export default function Form({
               name="customerId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               defaultValue=""
+              onChange={(e) => setCustomerId(e.target.value)}
               aria-describedby={
                 result.validationErrors?.customerId
                   ? "customer-error"
@@ -93,6 +93,11 @@ export default function Form({
                   name="productIds"
                   value={p.id}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setProductIds([...productIds, e.target.value]);
+                    } 
+                  }}
                 />
                 <span>
                   {p.name} — {formatCurrency(p.price)}
@@ -116,6 +121,7 @@ export default function Form({
                   type="radio"
                   value="pending"
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  onChange={(e) => setStatus(e.currentTarget.value as Status)}
                   required
                 />
                 <label
@@ -132,6 +138,8 @@ export default function Form({
                   type="radio"
                   value="paid"
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  onChange={(e) => setStatus(e.currentTarget.value as Status)}
+                  required
                 />
                 <label
                   htmlFor="paid"
