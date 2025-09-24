@@ -1,4 +1,4 @@
-import { formatCurrency } from "./utils";
+import { formatPriceFromCents } from "./utils";
 import { type Invoice, InvoiceStatus } from "generated";
 import { type ProductFormat, RevenueTable } from "./definitions";
 import { prisma } from "./prisma"
@@ -63,7 +63,7 @@ export async function fetchLatestInvoices() {
 
       return {
         id: invoice.id,
-        amount: formatCurrency(total),
+        amount: formatPriceFromCents(total),
         name: invoice.customer.name,
         image_url: invoice.customer.image_url ?? "/customers/default.png",
         email: invoice.customer.email,
@@ -110,8 +110,8 @@ export async function fetchCardData() {
     return {
       numberOfInvoices,
       numberOfCustomers,
-      totalPaidInvoices: formatCurrency(sumProducts(paidList)),
-      totalPendingInvoices: formatCurrency(sumProducts(pendingList)),
+      totalPaidInvoices: formatPriceFromCents(sumProducts(paidList)),
+      totalPendingInvoices: formatPriceFromCents(sumProducts(pendingList)),
     };
   } catch (error) {
     console.error("Database Error:", error);

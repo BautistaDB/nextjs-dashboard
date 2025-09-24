@@ -1,14 +1,14 @@
 import { Product } from '@/generated';
 import { RevenueTable, ProductStatus } from './definitions';
 
-export const formatCurrency = (amount: number | bigint) => {
-  return (amount).toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-};
+export function formatPriceFromCents(cents: bigint | number): string {
+  if (cents === null || cents === undefined) return "$0,00";
+  const s = typeof cents === "bigint" ? cents.toString() : Math.trunc(cents).toString();
+  const entero = s.length > 2 ? s.slice(0, -2) : "0";
+  const dec = s.slice(-2).padStart(2, "0");
+  const miles = entero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");// Separador de miles
+  return `$${miles},${dec}`;
+}
 
 export function formatDateToLocal(
   date: Date,

@@ -1,5 +1,5 @@
 import { UpdateProduct, DeleteProduct } from "@/app/ui/products/buttons";
-import { formatCurrency, prodStatus } from "@/app/lib/utils";
+import { formatPriceFromCents, prodStatus } from "@/app/lib/utils";
 import { fetchFilteredProducts } from "@/app/lib/data";
 import { ProductFormat } from "@/app/lib/definitions";
 import ProductStatus from "@/app/ui/products/status";
@@ -77,7 +77,7 @@ export default async function ProductsTable({
                     {p.description ?? "—"}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(p.price)}
+                    {formatPriceFromCents(p.price)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <ProductStatus status={prodStatus(p)} />

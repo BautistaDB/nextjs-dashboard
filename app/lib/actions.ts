@@ -32,10 +32,9 @@ const CustomerSchema = z.object({
 const ProductSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, { message: "El nombre es obligatorio" }),
-  description: z.string().min(1, { message: "La descripcion es obligatoria" }),
-  price: z.coerce
-    .number()
-    .gt(0, { message: "Por favor, ingrese un monto maoyr a $0" }),
+  description: z.string().optional().transform((v) => (v?.trim() ? v : null)),
+  price: z.bigint()
+    .gt(BigInt(0), { message: "Por favor, ingrese un monto maoyr a $0" }),
 });
 
 /* --------------  TYPES ---------------- */

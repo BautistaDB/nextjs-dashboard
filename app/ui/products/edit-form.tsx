@@ -12,6 +12,7 @@ import {
 import { updateProduct, ProductsState } from "@/app/lib/actions";
 import { ProductFormat } from "@/app/lib/definitions";
 import { useAction } from "next-safe-action/hooks";
+import PriceInput from "../inputBigint";
 
 export default function EditProductForm({
   product,
@@ -20,10 +21,10 @@ export default function EditProductForm({
 }) {
   const [id] = useState(product.id);
   const [name, setName] = useState(product.name);
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState(product.description ?? "");
+  const [price, setPrice] = useState(product.price);
 
-  const { execute, result } = useAction(updateProduct);
+  const { execute } = useAction(updateProduct);
 
   return (
     <form
@@ -53,6 +54,7 @@ export default function EditProductForm({
               defaultValue={product.name}
               placeholder="e.g. Wireless Mouse"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              onChange={(e) => setName(e.target.value)}
             />
             <TagIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
@@ -62,17 +64,11 @@ export default function EditProductForm({
           <label htmlFor="price" className="mb-2 block text-sm font-medium">
             Price
           </label>
-          <div className="relative">
-            <input
-              id="price"
-              name="price"
-              type="number"
-              step="0.01"
-              defaultValue={product.price}
-              placeholder="Enter price"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+          <div>
+            <PriceInput
+              value={product.price}
+              onChange={(val) => setPrice(val)}
             />
-            <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
 
           {/* Descripción */}
@@ -91,6 +87,7 @@ export default function EditProductForm({
                 defaultValue={product.description ?? ""}
                 placeholder="Short product description"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                onChange={(e) => setDescription(e.target.value)}
               />
               <DocumentTextIcon className="pointer-events-none absolute left-3 top-3 h-[18px] w-[18px] text-gray-500" />
             </div>
@@ -108,4 +105,16 @@ export default function EditProductForm({
       </div>
     </form>
   );
+}
+{
+  /* <input
+              id="price"
+              name="price"
+              type="number"
+              step="0.01"
+              defaultValue={product.price}
+              placeholder="Enter price"
+              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              onChange={(e) => setPrice()}
+            /> */
 }

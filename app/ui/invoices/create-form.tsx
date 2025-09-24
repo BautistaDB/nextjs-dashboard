@@ -7,7 +7,7 @@ import {
   ClockIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { formatCurrency } from "@/app/lib/utils";
+import { formatPriceFromCents } from "@/app/lib/utils";
 import { Button } from "@/app/ui/button";
 import { createInvoice } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
@@ -100,7 +100,7 @@ export default function Form({
                   }}
                 />
                 <span>
-                  {p.name} — {formatCurrency(p.price)}
+                  {p.name} — {formatPriceFromCents(p.price)}
                 </span>
               </label>
             ))}

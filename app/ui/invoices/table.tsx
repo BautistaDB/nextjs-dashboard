@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
-import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
+import { formatDateToLocal, formatPriceFromCents } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import ProductModal from "../products/ProductModal";
 
@@ -50,7 +50,7 @@ export default async function InvoicesTable({
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
                     <p className="text-xl font-medium">
-                      {formatCurrency(invoiceTotal(invoice.products))}
+                      {formatPriceFromCents(invoiceTotal(invoice.products))}
                     </p>
                     <p>{formatDateToLocal(invoice.date)}</p>
                     <p>{invoice.products.length}</p>
@@ -113,7 +113,7 @@ export default async function InvoicesTable({
                     {invoice.customer.email}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(invoiceTotal(invoice.products))}
+                    {formatPriceFromCents(invoiceTotal(invoice.products))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {formatDateToLocal(invoice.date)}

@@ -7,6 +7,7 @@ import { Button } from "@/app/ui/button";
 import { createProduct, ProductsState } from "@/app/lib/actions";
 import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
+import PriceInput from "../inputBigint";
 
 export default function Form({ products }: { products: ProductFormat }) {
   const initialState: ProductsState = { message: null, errors: {} };
@@ -73,19 +74,7 @@ export default function Form({ products }: { products: ProductFormat }) {
           <label htmlFor="price" className="mb-2 block text-sm font-medium">
             Price Product
           </label>
-          <div className="relative mt-2 rounded-md">
-            <div className="relative">
-              <CurrencyDollarIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                id="price"
-                name="price"
-                type="text"
-                placeholder="Enter product price"
-                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                onChange={(e) => setPrice(/*completar */)}
-              />
-            </div>
-          </div>
+          <PriceInput value={products.price} onChange={(val) => setPrice(val)} />
         </div>
       </div>
 
