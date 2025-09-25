@@ -15,7 +15,7 @@ import Link from "next/link";
 import { Button } from "@/app/ui/button";
 import { updateInvoice } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
-import { formatCurrency, prodStatus } from "@/app/lib/utils";
+import { formatPriceFromCents, prodStatus } from "@/app/lib/utils";
 import { useState } from "react";
 
 export default function EditInvoiceForm({
@@ -29,8 +29,10 @@ export default function EditInvoiceForm({
 }) {
   const [id] = useState(invoice.id);
   const [customerId, setCustomerId] = useState(invoice.customer_id);
-  const [status, setStatus] = useState<Status>("pending");
-  const [productIds, setProductIds] = useState<string[]>([]);
+  const [status, setStatus] = useState<Status>(invoice.status);
+  const [productIds, setProductIds] = useState<string[]>(
+    products.filter((p) => p.invoice_id === invoice.id).map((p) => p.id)
+  );
   const { execute, result } = useAction(updateInvoice);
 
   return (
@@ -49,11 +51,7 @@ export default function EditInvoiceForm({
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
-          <input
-            type="hidden"
-            name="id"
-            value={id}
-          />
+          <input type="hidden" name="id" value={id} />
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
             Choose customer
           </label>
@@ -102,11 +100,15 @@ export default function EditInvoiceForm({
                   onChange={(e) => {
                     if (e.target.checked) {
                       setProductIds([...productIds, e.target.value]);
+                    } else {
+                      setProductIds(
+                        productIds.filter((id) => id !== e.target.value)
+                      );
                     }
                   }}
                 />
                 <span>
-                  {p.name} — {formatCurrency(p.price)}
+                  {p.name} — {formatPriceFromCents(p.price)}
                 </span>
               </label>
             ))}

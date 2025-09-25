@@ -6,28 +6,25 @@ import { PriceInputProps } from "../lib/definitions";
 // Formatea bigint en centavos a string con puntos y coma
 function formatBigint(value?: bigint): string {
   if (value === undefined) return "";
-
   const s = value.toString();
   const entero = s.length > 2 ? s.slice(0, -2) : "0";
   const decimales = s.slice(-2).padStart(2, "0");
-
-  const miles = entero.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Agregar puntos de miles
-
+  const miles = entero.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // agrega puntos cada 3 digitios
   return `${miles},${decimales}`;
 }
 
-// Convierte string (con puntos de miles y coma decimal) a bigint en centavos
+// Convierte string a bigint en centavos
 function parseToBigint(val: string): bigint {
-  if (!val) return BigInt(0);
-
-  val = val.replace(/\./g, ""); // Quitar puntos de miles
-
-  let [entero, decimales = ""] = val.split(","); // Separa coma
-
-  decimales = (decimales + "00").slice(0, 2); // Normaliza decimales a 2 dígitos
-
-  const all = entero + decimales;
-  return BigInt(all);
+  // Si no hay coma y hay punto
+  if (!val.includes(",") && val.includes(".")) {
+    const i = val.lastIndexOf("."); //se usa el ultimo punto para decimal
+    val = val.slice(0, i) + "," + val.slice(i + 1);
+  }
+  val = val.replace(/\./g, "");  // saca los puntos
+  let [entero, decimales = ""] = val.split(",");  // separa con coma
+  decimales = (decimales + "00").slice(0, 2);  // decimal con 2 digitos
+  const num = (entero || "0") + decimales;
+  return BigInt(num);
 }
 
 export default function PriceInput({ value, onChange }: PriceInputProps) {
@@ -39,19 +36,14 @@ export default function PriceInput({ value, onChange }: PriceInputProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
-
-    // Solo números, puntos y comas
-    val = val.replace(/[^0-9.,]/g, "");
-
+    val = val.replace(/[^0-9.,]/g, ""); // solo números, puntos y coma
     setInputValue(val);
-
     const bigintVal = parseToBigint(val);
     onChange?.(bigintVal);
   };
 
-  const handleBlur = () => {
-    // Al salir del input → formatear bonito con miles y coma
-    const bigintVal = parseToBigint(inputValue);
+  const handleBlur = () => { // sale del input y formatea
+    const bigintVal = parseToBigint(inputValue); 
     setInputValue(formatBigint(bigintVal));
   };
 

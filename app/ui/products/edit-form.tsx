@@ -67,7 +67,7 @@ export default function EditProductForm({
           <div>
             <PriceInput
               value={product.price}
-              onChange={(val) => setPrice(val)}
+              onChange={(bigintVal) => setPrice(bigintVal)}
             />
           </div>
 
