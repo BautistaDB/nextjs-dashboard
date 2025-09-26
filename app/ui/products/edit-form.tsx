@@ -1,4 +1,3 @@
-// app/ui/products/edit-form.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,10 +5,9 @@ import Link from "next/link";
 import { Button } from "@/app/ui/button";
 import {
   TagIcon,
-  CurrencyDollarIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-import { updateProduct, ProductsState } from "@/app/lib/actions";
+import { updateProduct } from "@/app/lib/actions";
 import { ProductFormat } from "@/app/lib/definitions";
 import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
@@ -105,16 +103,4 @@ export default function EditProductForm({
       </div>
     </form>
   );
-}
-{
-  /* <input
-              id="price"
-              name="price"
-              type="number"
-              step="0.01"
-              defaultValue={product.price}
-              placeholder="Enter price"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-              onChange={(e) => setPrice()}
-            /> */
 }

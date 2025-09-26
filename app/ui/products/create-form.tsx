@@ -2,15 +2,13 @@
 
 import { ProductFormat } from "@/app/lib/definitions";
 import Link from "next/link";
-import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
-import { createProduct, ProductsState } from "@/app/lib/actions";
+import { createProduct } from "@/app/lib/actions";
 import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
 
 export default function Form({ products }: { products: ProductFormat }) {
-  const initialState: ProductsState = { message: null, errors: {} };
   const [name, setName] = useState(products.name);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(products.price);

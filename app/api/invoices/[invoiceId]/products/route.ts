@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 
+// TODO - Pasar route a una action
+
 export async function GET(
   _req: Request,
   context: { params: Promise<{ invoiceId: string }> }

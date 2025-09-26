@@ -33,7 +33,7 @@ export default function EditInvoiceForm({
   const [productIds, setProductIds] = useState<string[]>(
     products.filter((p) => p.invoice_id === invoice.id).map((p) => p.id)
   );
-  const { execute, result } = useAction(updateInvoice);
+  const { execute, result: {validationErrors} } = useAction(updateInvoice);
 
   return (
     <form
@@ -83,7 +83,7 @@ export default function EditInvoiceForm({
           <div
             className="space-y-2 rounded-md border border-gray-200 bg-white p-3"
             aria-describedby={
-              result.validationErrors?.productIds ? "products-error" : undefined
+              validationErrors?.productIds ? "products-error" : undefined
             }
           >
             {products.map((p) => (

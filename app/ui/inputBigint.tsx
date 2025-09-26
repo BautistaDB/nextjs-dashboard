@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PriceInputProps } from "../lib/definitions";
+
+type PriceInputProps = {
+  value?: bigint; //
+  onChange?: (value: bigint) => void;
+};
 
 // Formatea bigint en centavos a string con puntos y coma
 function formatBigint(value?: bigint): string {

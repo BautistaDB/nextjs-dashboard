@@ -13,8 +13,3 @@ export type ProductFormat = Pick<Product, "id" | "name" | "price" | "description
 export type ProductStatus = "Available" | "Sold";
 
 export type Status = "pending" | "paid";
-
-export type PriceInputProps = {
-  value?: bigint; //
-  onChange?: (value: bigint) => void;
-};

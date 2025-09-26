@@ -13,6 +13,7 @@ import { createInvoice } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { Status } from "@/app/lib/definitions";
+import { ErrorMessages } from "@/errors";
 
 export default function Form({
   customers,
@@ -24,7 +25,7 @@ export default function Form({
   const [customerId, setCustomerId] = useState("");
   const [status, setStatus] = useState<Status>("pending");
   const [productIds, setProductIds] = useState<string[]>([]);
-  const { execute, result } = useAction(createInvoice);
+  const { execute, result: { validationErrors } } = useAction(createInvoice);
 
   return (
     <form
@@ -52,11 +53,11 @@ export default function Form({
               defaultValue=""
               onChange={(e) => setCustomerId(e.target.value)}
               aria-describedby={
-                result.validationErrors?.customerId
+                validationErrors?.customerId
                   ? "customer-error"
                   : undefined
               }
-              aria-invalid={!!result.validationErrors?.customerId}
+              aria-invalid={!!validationErrors?.customerId}
               required
             >
               <option value="" disabled>
@@ -80,7 +81,7 @@ export default function Form({
           <div
             className="space-y-2 rounded-md border border-gray-200 bg-white p-3"
             aria-describedby={
-              result.validationErrors?.productIds ? "products-error" : undefined
+              validationErrors?.productIds ? "products-error" : undefined
             }
           >
             {products.map((p) => (

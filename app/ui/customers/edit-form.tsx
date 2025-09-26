@@ -7,6 +7,7 @@ import { Button } from "@/app/ui/button";
 import { updateCustomer } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ErrorMessages } from "@/errors";
 
 export default function Form({
   customer,
@@ -17,7 +18,7 @@ export default function Form({
   const [name, setName] = useState(customer.name);
   const [email, setEmail] = useState(customer.email);
   const [image, setImage] = useState<File | null>(null);
-  const { execute } = useAction(updateCustomer);
+  const { execute, result: { validationErrors } } = useAction(updateCustomer);
 
   return (
     <form
@@ -76,6 +77,7 @@ export default function Form({
               />
             </div>
           </div>
+          <ErrorMessages errors={validationErrors?.email} />
         </div>
 
         {/* Customer Image */}

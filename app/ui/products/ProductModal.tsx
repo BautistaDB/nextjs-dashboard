@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Modal from "./Modal";
+import Modal from "../../../Modal";
 import { Spinner } from "../spinner";
 import { ProductFormat } from "../../lib/definitions";
 import { formatPriceFromCents } from "@/app/lib/utils";
