@@ -13,3 +13,5 @@ export type ProductFormat = Pick<Product, "id" | "name" | "price" | "description
 export type ProductStatus = "Available" | "Sold";
 
 export type Status = "pending" | "paid";
+
+export type ProductClient = Omit<ProductFormat, "price"> & { price: number };

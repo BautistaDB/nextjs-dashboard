@@ -7,6 +7,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { prisma } from "./prisma";
 import { action } from "./safe-actions";
+import { describe } from "node:test";
 
 /* --------------  SCHEMAS ---------------- */
 
@@ -277,3 +278,27 @@ export async function authenticate(
     throw error;
   }
 }
+
+const GetProducts = InvoiceSchema.pick({id: true})
+
+export const getInvoiceProducts = action
+  .inputSchema(GetProducts)
+  .action(async ({ parsedInput }) => {
+    const { id } = parsedInput;
+
+    const products = await prisma.product.findMany({
+      where: { invoice_id: id },
+      select: { id: true, name: true, price: true, description: true, invoice_id: true },
+    });
+
+    return {
+      ok: true as const,
+      products: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        description: p.description ?? null,
+        invoice_id: p.invoice_id,
+      })),
+    };
+  });

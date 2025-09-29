@@ -123,7 +123,7 @@ export default async function InvoicesTable({
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 flex items-center gap-2">
                     <ProductModal
-                      invoiceId={invoice.id}
+                      id={invoice.id}
                       count={invoice.products.length}
                     />
                   </td>

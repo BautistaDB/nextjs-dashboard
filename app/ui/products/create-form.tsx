@@ -9,7 +9,7 @@ import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
 
 export default function Form({ products }: { products: ProductFormat }) {
-  const [name, setName] = useState(products.name);
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(products.price);
 
