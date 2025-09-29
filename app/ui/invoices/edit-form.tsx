@@ -13,7 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { updateInvoice } from "@/app/lib/actions";
+import { updateInvoice } from "@/app/actions/invoices/updateInvoiceAction";
 import { useAction } from "next-safe-action/hooks";
 import { formatPriceFromCents, prodStatus } from "@/app/lib/utils";
 import { useState } from "react";

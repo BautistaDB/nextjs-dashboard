@@ -3,10 +3,10 @@
 import { ProductFormat } from "@/app/lib/definitions";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { createProduct } from "@/app/lib/actions";
 import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
+import { createProduct } from "@/app/actions/products/createProductAction";
 
 export default function Form({ products }: { products: ProductFormat }) {
   const [name, setName] = useState("");

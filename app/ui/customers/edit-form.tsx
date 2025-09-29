@@ -4,10 +4,10 @@ import { CustomerTable } from "@/app/lib/definitions";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { updateCustomer } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ErrorMessages } from "@/errors";
+import { updateCustomer } from "@/app/actions/customers/updateCustomerAction";
 
 export default function Form({
   customer,

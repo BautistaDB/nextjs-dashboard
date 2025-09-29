@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
-import { createCustomer } from "@/app/lib/actions";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ErrorMessages } from "@/errors";
+import { createCustomer } from "@/app/actions/customers/createCustomerAction";
 
 export default function Form() {
   const [name, setName] = useState("");

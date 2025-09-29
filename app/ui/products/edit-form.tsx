@@ -7,10 +7,10 @@ import {
   TagIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-import { updateProduct } from "@/app/lib/actions";
 import { ProductFormat } from "@/app/lib/definitions";
 import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
+import { updateProduct } from "@/app/actions/products/updateProductAction";
 
 export default function EditProductForm({
   product,
