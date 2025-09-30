@@ -2,7 +2,7 @@ import Image from "next/image";
 import { lusitana } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import { CreateCustomer, UpdateCustomer, DeleteCustomer } from "./buttons";
-import { fetchFilteredCustomers } from "@/app/lib/data";
+import { fetchFilteredCustomers } from "@/app/actions/customers/queries"
 import { formatPriceFromCents } from "@/app/lib/utils";
 
 export default async function CustomersTable({

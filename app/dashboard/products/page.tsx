@@ -4,8 +4,8 @@ import Table from '@/app/ui/products/table';
 import { CreateProduct } from '@/app/ui/products/buttons';
 import { lusitana } from '@/app/ui/fonts';
 import { Suspense } from 'react';
-import { fetchProductsPages } from '@/app/lib/data';
 import { Metadata } from 'next';
+import { fetchProductsPages } from '@/app/actions/products/queries';
  
 export const metadata: Metadata = {
   title: 'Products',

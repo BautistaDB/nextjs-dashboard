@@ -33,21 +33,39 @@ export function formatDateToLocal(
 };
 
 export const generateYAxis = (revenue: RevenueTable[]) => {
-  // Tomar el valor máximo
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
-  // Redondear hacia arriba al múltiplo de 1M más cercano
-  const topLabel = Math.ceil(highestRecord / 1_000_000) * 1_000_000;
+  const isMillion = highestRecord >= 1_000_000;
+  const unit = isMillion ? 1_000_000 : 1_000;
+  const suffix = isMillion ? "M" : "K";
+
+  // Paso "ideal": dividir en ~6 segmentos
+  const rawStep = highestRecord / 6;
+
+  // Función para redondear step a un múltiplo "bonito"
+  const roundToNiceStep = (val: number) => {
+    const pow = Math.pow(10, Math.floor(Math.log10(val)));
+    const n = val / pow;
+    if (n < 2) return 1 * pow;
+    if (n < 5) return 2 * pow;
+    return 5 * pow;
+  };
+
+  const step = roundToNiceStep(rawStep);
+
+  // Redondear topLabel hacia arriba
+  const topLabel = Math.ceil(highestRecord / step) * step;
 
   const yAxisLabels: string[] = [];
 
-  // Decrementar en pasos de 1M
-  for (let i = topLabel; i >= 0; i -= 5_000_000) {
-    yAxisLabels.push(`$${i / 5_000_000}M`);
+  for (let i = topLabel; i >= 0; i -= step) {
+    yAxisLabels.push(`$${i / unit}${suffix}`);
   }
 
-  return { yAxisLabels, topLabel };
+  return { yAxisLabels, topLabel, step };
 };
+
+
 
 export const generatePagination = (currentPage: number, totalPages: number) => {
   // If the total number of pages is 7 or less,

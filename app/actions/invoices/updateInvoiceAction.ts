@@ -1,7 +1,7 @@
 "use server";
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
-import { InvoiceSchema } from "./schemaInvoice";
+import { InvoiceSchema } from "../../validations/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 

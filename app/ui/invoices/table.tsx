@@ -2,7 +2,7 @@ import Image from "next/image";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
 import { formatDateToLocal, formatPriceFromCents } from "@/app/lib/utils";
-import { fetchFilteredInvoices } from "@/app/lib/data";
+import { fetchFilteredInvoices } from "@/app/actions/invoices/queries"
 import ProductModal from "../products/ProductModal";
 
 function invoiceTotal(products: { price: number | string }[]) {

@@ -1,8 +1,9 @@
 // app/dashboard/invoices/[id]/edit/page.tsx
 import Form from "@/app/ui/invoices/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchCustomers, fetchInvoiceEditData } from "@/app/lib/data";
 import { notFound } from "next/navigation";
+import { fetchInvoiceEditData } from "@/app/actions/invoices/queries";
+import { fetchCustomers } from "@/app/actions/customers/queries";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;

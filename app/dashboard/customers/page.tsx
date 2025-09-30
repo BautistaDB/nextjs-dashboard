@@ -1,8 +1,8 @@
 import { Metadata } from "next";
-import { fetchFilteredCustomers } from "@/app/lib/data";
 import CustomersTable from "@/app/ui/customers/table";
 import { Suspense } from "react";
 import { CustomersSkeleton } from "@/app/ui/skeletons";
+import { fetchFilteredCustomers } from "@/app/actions/customers/queries";
 
 export const metadata: Metadata = {
   title: "Customers",

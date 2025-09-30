@@ -8,10 +8,10 @@ import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
 import { createProduct } from "@/app/actions/products/createProductAction";
 
-export default function Form({ products }: { products: ProductFormat }) {
+export default function Form({ products }: { products: ProductFormat[] }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState(products.price);
+  const [price, setPrice] = useState<bigint>(BigInt(0));
 
   const { execute } = useAction(createProduct);
 
@@ -72,7 +72,7 @@ export default function Form({ products }: { products: ProductFormat }) {
           <label htmlFor="price" className="mb-2 block text-sm font-medium">
             Price Product
           </label>
-          <PriceInput value={products.price} onChange={(val) => setPrice(val)} />
+          <PriceInput value={price} onChange={(val) => setPrice(val)} />
         </div>
       </div>
 

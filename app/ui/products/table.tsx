@@ -1,8 +1,8 @@
 import { UpdateProduct, DeleteProduct } from "@/app/ui/products/buttons";
 import { formatPriceFromCents, prodStatus } from "@/app/lib/utils";
-import { fetchFilteredProducts } from "@/app/lib/data";
 import { ProductFormat } from "@/app/lib/definitions";
 import ProductStatus from "@/app/ui/products/status";
+import { fetchFilteredProducts } from "@/app/actions/products/queries";
 
 export default async function ProductsTable({
   query,

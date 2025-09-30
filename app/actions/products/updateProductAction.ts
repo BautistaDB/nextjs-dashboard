@@ -1,7 +1,9 @@
+"use server"
+
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
 import { revalidatePath } from "next/cache";
-import { ProductSchema } from "./schemaProduct";
+import { ProductSchema } from "../../validations/schemas";
 import { redirect } from "next/navigation";
 
 const UpdateProduct = ProductSchema;

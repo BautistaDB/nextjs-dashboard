@@ -1,7 +1,7 @@
 import Form from "@/app/ui/products/edit-form";
 import Breadcrumbs from "@/app/ui/products/breadcrumbs";
-import { fetchProductById } from "@/app/lib/data";
 import { notFound } from "next/navigation";
+import { fetchProductById } from "@/app/actions/products/queries";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const { id } = await params;

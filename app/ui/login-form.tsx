@@ -10,7 +10,7 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "./button";
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
-import { authenticate } from "../actions/authAction";
+import { authenticate } from "../validations/authAction";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
