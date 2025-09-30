@@ -33,36 +33,25 @@ export function formatDateToLocal(
 };
 
 export const generateYAxis = (revenue: RevenueTable[]) => {
+  // Tomar el máximo de los registros
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
 
-  const isMillion = highestRecord >= 1_000_000;
-  const unit = isMillion ? 1_000_000 : 1_000;
-  const suffix = isMillion ? "M" : "K";
+  // Redondear hacia arriba a un múltiplo "lindo"
+  const topLabel = Math.ceil(highestRecord / 1000) * 1000;
 
-  // Paso "ideal": dividir en ~6 segmentos
-  const rawStep = highestRecord / 6;
-
-  // Función para redondear step a un múltiplo "bonito"
-  const roundToNiceStep = (val: number) => {
-    const pow = Math.pow(10, Math.floor(Math.log10(val)));
-    const n = val / pow;
-    if (n < 2) return 1 * pow;
-    if (n < 5) return 2 * pow;
-    return 5 * pow;
-  };
-
-  const step = roundToNiceStep(rawStep);
-
-  // Redondear topLabel hacia arriba
-  const topLabel = Math.ceil(highestRecord / step) * step;
+  // Queremos 6 etiquetas (incluyendo el 0 y el máximo)
+  const steps = 5;
+  const stepSize = Math.ceil(topLabel / steps);
 
   const yAxisLabels: string[] = [];
 
-  for (let i = topLabel; i >= 0; i -= step) {
-    yAxisLabels.push(`$${i / unit}${suffix}`);
+  for (let i = topLabel; i >= 0; i -= stepSize) {
+    if (i >= 100000) {
+      yAxisLabels.push(`$${i / 100000}K`);
+    }
   }
 
-  return { yAxisLabels, topLabel, step };
+  return { yAxisLabels, topLabel };
 };
 
 

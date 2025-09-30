@@ -10,7 +10,7 @@ import {
 import { ProductFormat } from "@/app/lib/definitions";
 import { useAction } from "next-safe-action/hooks";
 import PriceInput from "../inputBigint";
-import { updateProduct } from "@/app/actions/products/updateProductAction";
+import { updateProduct } from "@/app/actions/products/updateProduct";
 
 export default function EditProductForm({
   product,

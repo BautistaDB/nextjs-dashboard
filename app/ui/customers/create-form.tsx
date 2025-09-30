@@ -6,7 +6,7 @@ import { Button } from "@/app/ui/button";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ErrorMessages } from "@/errors";
-import { createCustomer } from "@/app/actions/customers/createCustomerAction";
+import { createCustomer } from "@/app/actions/customers/createCustomer";
 
 export default function Form() {
   const [name, setName] = useState("");

@@ -1,25 +1,12 @@
-
-
-/* --------------  DASHBOARD  ---------------- */
+"use server"
 
 import { RevenueTable } from "@/app/lib/definitions";
 import { prisma } from "@/app/lib/prisma";
 import { formatPriceFromCents } from "@/app/lib/utils";
 
-const MONTHS = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
-] as const;
+const MONTHS = Array.from({ length: 12 }, (_, i) =>
+  new Date(0, i).toLocaleString("en-US", { month: "short" }).toUpperCase()
+) 
 
 export async function fetchRevenueForChart(): Promise<RevenueTable[]> {
   const paid = await prisma.invoice.findMany({

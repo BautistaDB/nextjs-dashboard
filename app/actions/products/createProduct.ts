@@ -1,8 +1,9 @@
 "use server"
+
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
+import { ProductSchema } from "@/app/lib/schemas";
 import { revalidatePath } from "next/cache";
-import { ProductSchema } from "../../validations/schemas";
 import { redirect } from "next/navigation";
 
 const CreateProduct = ProductSchema.omit({id:true});

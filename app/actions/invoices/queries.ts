@@ -1,5 +1,7 @@
+"use server"
+
 import { prisma } from "@/app/lib/prisma";
-import { InvoiceStatus } from "generated";
+import { InvoiceStatus } from "@/generated";
 
 const ITEMS_PER_PAGE = 6;
 

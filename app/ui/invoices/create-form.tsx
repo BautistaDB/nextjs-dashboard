@@ -12,7 +12,7 @@ import { Button } from "@/app/ui/button";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { Status } from "@/app/lib/definitions";
-import { createInvoice } from "@/app/actions/invoices/createInvoiceAction";
+import { createInvoice } from "@/app/actions/invoices/createInvoice";
 
 export default function Form({
   customers,

@@ -1,6 +1,8 @@
+"use server"
+
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
-import { CustomerSchema } from "@/app/validations/schemas";
+import { CustomerSchema } from "@/app/lib/schemas";
 import { Invoice } from "@/generated";
 
 export async function fetchCustomers() {

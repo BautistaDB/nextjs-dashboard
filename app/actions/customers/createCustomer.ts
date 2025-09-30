@@ -1,29 +1,31 @@
 "use server";
+
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
-import { CustomerSchema } from "../../validations/schemas";
+import { CustomerSchema } from "@/app/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-const UpdateCustomer = CustomerSchema;
+const CreateCustomer = CustomerSchema.omit({id:true});
 
-export const updateCustomer = action
-  .inputSchema(UpdateCustomer)
+export const createCustomer = action
+  .inputSchema(CreateCustomer)
   .action(async ({ parsedInput }) => {
-    const { id, name, email, image_url } = parsedInput;
+    const { name, email, image_url } = parsedInput;
 
     try {
-      await prisma.customer.update({
-        where: { id },
+      await prisma.customer.create({
         data: {
           name,
           email,
           image_url: image_url ? image_url.startsWith("/customers/") ? image_url : `/customers/${image_url}` : "/customers/default.png",
         },
       });
-    } catch (e) {
-      console.error(e);
-      throw new Error("Failed to update customer");
+    } catch (error) {
+      console.error(error);
+      return {
+        message: "Error en la base de datos. No se pudo crear el cliente.",
+      };
     }
 
     revalidatePath("/dashboard/customers");

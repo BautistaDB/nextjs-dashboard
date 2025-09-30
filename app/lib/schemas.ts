@@ -9,14 +9,6 @@ export const InvoiceSchema = z.object({
   status: z.enum(["pending", "paid"]),
 });
 
-export const ProductSchema = z.object({
-  id: z.string().uuid(),
-  name: z.string().min(1, { message: "El nombre es obligatorio" }),
-  description: z.string().optional().transform((v) => (v?.trim() ? v : null)),
-  price: z.bigint()
-    .gt(BigInt(0), { message: "Por favor, ingrese un monto mayor a $0" }),
-});
-
 export const CustomerSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, { message: "El nombre es obligatorio" }),
@@ -26,3 +18,12 @@ export const CustomerSchema = z.object({
     .min(1, { message: "La imagen es obligatoria" })
     .nullable(),
 });
+
+export const ProductSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, { message: "El nombre es obligatorio" }),
+  description: z.string().optional().transform((v) => (v?.trim() ? v : null)),
+  price: z.bigint()
+    .gt(BigInt(0), { message: "Por favor, ingrese un monto maoyr a $0" }),
+});
+

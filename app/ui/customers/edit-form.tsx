@@ -7,7 +7,7 @@ import { Button } from "@/app/ui/button";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ErrorMessages } from "@/errors";
-import { updateCustomer } from "@/app/actions/customers/updateCustomerAction";
+import { updateCustomer } from "@/app/actions/customers/updateCustomer";
 
 export default function Form({
   customer,

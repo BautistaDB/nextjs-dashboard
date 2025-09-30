@@ -6,7 +6,7 @@ import { Spinner } from "../spinner";
 import { ProductClient, } from "../../lib/definitions";
 import { formatPriceFromCents } from "@/app/lib/utils";
 import { useAction } from "next-safe-action/hooks";
-import { getInvoiceProducts } from "@/app/actions/products/queries"
+import { getInvoiceProducts } from "@/app/actions/products/viewProduct";
 
 export default function ProductModal({
   id,

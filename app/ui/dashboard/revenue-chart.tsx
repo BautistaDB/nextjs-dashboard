@@ -1,7 +1,7 @@
 import { generateYAxis } from '@/app/lib/utils';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchRevenueForChart } from '@/app/lib/data';
+import { fetchRevenueForChart } from '@/app/actions/dashboard/queries';
 
 export default async function RevenueChart() {
   const revenue = await fetchRevenueForChart();

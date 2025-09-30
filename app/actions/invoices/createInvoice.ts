@@ -1,7 +1,8 @@
 "use server";
+
 import { prisma } from "@/app/lib/prisma";
 import { action } from "@/app/lib/safe-actions";
-import { InvoiceSchema } from "../../validations/schemas";
+import { InvoiceSchema } from "@/app/lib/schemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -13,7 +14,7 @@ export const createInvoice = action
     const { customerId, productIds, status } = parsedInput;
 
     try {
-      const invoice = await prisma.invoice.create({
+      await prisma.invoice.create({
         data: {
           customer_id: customerId,
           status,
