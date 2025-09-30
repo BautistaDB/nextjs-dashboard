@@ -3,7 +3,7 @@ import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import type { UserTable } from "@/app/lib/definitions";
-import bcrypt from "bcrypt";
+import bcrypt from 'bcryptjs'
 import { prisma } from "@/app/lib/prisma";
 
 async function getUser(email: string): Promise<UserTable | undefined> {
